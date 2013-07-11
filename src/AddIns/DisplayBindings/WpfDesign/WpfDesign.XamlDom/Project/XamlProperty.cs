@@ -353,7 +353,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 				name = PropertyName;
 			}
 
-			element.SetAttribute(name, value);
+			element.SetAttribute(name, String.Empty, value);
 			return element.GetAttributeNode(name);
 		}
 
