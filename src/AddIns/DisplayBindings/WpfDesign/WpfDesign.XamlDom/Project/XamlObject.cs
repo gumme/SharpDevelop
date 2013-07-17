@@ -188,7 +188,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 		void UpdateMarkupExtensionChain()
 		{
 			var obj = this;
-			while (obj != null && obj.IsMarkupExtension) {
+			while (obj != null && obj.IsMarkupExtension && obj.ParentProperty != null) {
 				obj.ParentProperty.UpdateValueOnInstance();
 				obj = obj.ParentObject;
 			}			
@@ -445,7 +445,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 
 		void CreateWrapper()
 		{
-			if (Instance is Binding) {
+			if (Instance is BindingBase) {
 				wrapper = new BindingWrapper();
 			} else if (Instance is StaticResourceExtension) {
 				wrapper = new StaticResourceWrapper();
