@@ -133,6 +133,22 @@ namespace ICSharpCode.PackageManagement
 			get { return package.Id; }
 		}
 		
+		public string Name {
+			get { return package.GetName(); }
+		}
+		
+		public bool HasGalleryUrl {
+			get { return GalleryUrl != null; }
+		}
+		
+		public bool HasNoGalleryUrl {
+			get { return !HasGalleryUrl; }
+		}
+		
+		public Uri GalleryUrl {
+			get { return package.GalleryUrl; }
+		}
+		
 		public Uri IconUrl {
 			get { return package.IconUrl; }
 		}
