@@ -105,22 +105,33 @@ namespace ICSharpCode.WpfDesign.XamlDom
 
 		XmlAttribute xmlAttribute;
 
-		internal XmlAttribute XmlAttribute { 
+		internal XmlAttribute XmlAttribute {
 			get { return xmlAttribute; }
 			set {
 				xmlAttribute = value;
-				element = VirualAttachTo(XmlElement, value.OwnerElement);
+				element = VirtualAttachTo(XmlElement, value.OwnerElement);
 			}
 		}
 
-		static XmlElement VirualAttachTo(XmlElement e, XmlElement target) 
+		string GetPrefixOfNamespace(string ns, XmlElement target)
 		{
-			var prefix = target.GetPrefixOfNamespace(e.NamespaceURI);
-			
-			if (String.IsNullOrEmpty(prefix) && target.OwnerDocument.DocumentElement != null)
+			var prefix = target.GetPrefixOfNamespace(ns);
+			if (!string.IsNullOrEmpty(prefix))
+				return prefix;
+			var obj = this;
+			while (obj != null)
 			{
-				prefix = target.OwnerDocument.DocumentElement.GetPrefixOfNamespace(e.NamespaceURI);
+				prefix = obj.XmlElement.GetPrefixOfNamespace(ns);
+				if (!string.IsNullOrEmpty(prefix))
+					return prefix;
+				obj = obj.ParentObject;
 			}
+			return null;
+		}
+		
+		XmlElement VirtualAttachTo(XmlElement e, XmlElement target)
+		{
+			var prefix = GetPrefixOfNamespace(e.NamespaceURI, target);
 			
 			XmlElement newElement = e.OwnerDocument.CreateElement(prefix, e.LocalName, e.NamespaceURI);
 
@@ -167,7 +178,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 		}
 		
 		internal override void RemoveNodeFromParent()
-		{			
+		{
 			if (XmlAttribute != null) {
 				XmlAttribute.OwnerElement.RemoveAttribute(XmlAttribute.Name);
 				xmlAttribute = null;
@@ -176,7 +187,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 				if (!UpdateXmlAttribute(false, out holder)) {
 					element.ParentNode.RemoveChild(element);
 				}
-			}			
+			}
 			//TODO: PropertyValue still there
 			//UpdateMarkupExtensionChain();
 		}
@@ -188,7 +199,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 			XamlObject holder;
 			if (!UpdateXmlAttribute(false, out holder)) {
 				if (holder != null &&
-					holder.XmlAttribute != null) {
+				    holder.XmlAttribute != null) {
 					holder.XmlAttribute.OwnerElement.RemoveAttributeNode(holder.XmlAttribute);
 					holder.xmlAttribute = null;
 					holder.ParentProperty.AddChildNodeToProperty(holder.element);
@@ -220,7 +231,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 			while (obj != null && obj.IsMarkupExtension && obj.ParentProperty != null) {
 				obj.ParentProperty.UpdateValueOnInstance();
 				obj = obj.ParentObject;
-			}			
+			}
 		}
 
 		bool UpdateXmlAttribute(bool force, out XamlObject holder)
@@ -297,7 +308,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 		/// </summary>
 		public string ContentPropertyName {
 			get {
-				return contentPropertyName; 
+				return contentPropertyName;
 			}
 		}
 		
@@ -358,7 +369,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 				throw new ArgumentNullException("propertyName");
 			
 //			if (propertyName == ContentPropertyName)
-//				return 
+//				return
 			
 			foreach (XamlProperty p in properties) {
 				if (!p.IsAttached && p.PropertyName == propertyName)
@@ -485,7 +496,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 		}
 
 		object ProvideValue()
-		{			
+		{
 			if (wrapper != null) {
 				return wrapper.ProvideValue();
 			}
