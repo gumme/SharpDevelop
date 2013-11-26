@@ -10,17 +10,17 @@ namespace ICSharpCode.CodeCoverage
 {
 	public class ShowDisplayOptionsDropDown : AbstractMenuCommand
 	{
-		ToolBarDropDownButton dropDownButton;
+//		ToolBarDropDownButton dropDownButton;
 
 		public override void Run()
 		{
 		}
 		
-		protected override void OnOwnerChanged(EventArgs e)
-		{
-			base.OnOwnerChanged(e);
-			dropDownButton = (ToolBarDropDownButton)Owner;
-			MenuService.AddItemsToMenu(dropDownButton.DropDownItems, this, "/SharpDevelop/Pads/CodeCoveragePad/Toolbar/CodeCoveragePadDisplayOptions");
-		}		
+//		protected override void OnOwnerChanged(EventArgs e)
+//		{
+//			base.OnOwnerChanged(e);
+//			dropDownButton = (ToolBarDropDownButton)Owner;
+//			MenuService.AddItemsToMenu(dropDownButton.DropDownItems, this, "/SharpDevelop/Pads/CodeCoveragePad/Toolbar/CodeCoveragePadDisplayOptions");
+//		}
 	}
 }

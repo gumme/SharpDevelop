@@ -15,10 +15,6 @@ namespace ICSharpCode.Reports.Core
 	/// </remarks>
 	public class SortColumn : AbstractColumn {
 		
-		private ListSortDirection sortDirection = ListSortDirection.Ascending;
-		private bool caseSensitive;
-		
-		
 		public SortColumn():this(String.Empty,ListSortDirection.Ascending,typeof(System.String),false)
 		{
 		}
@@ -35,25 +31,16 @@ namespace ICSharpCode.Reports.Core
 		
 		public SortColumn(string columnName, ListSortDirection sortDirection, Type type,bool caseSensitive ):base (columnName,type)
 		{
-			this.caseSensitive = caseSensitive;
-			this.sortDirection = sortDirection;
+			this.CaseSensitive = caseSensitive;
+			this.SortDirection = sortDirection;
 		}
 		
 		#region properties
 		
-		public ListSortDirection SortDirection {
-			get {
-				return sortDirection;
-			}
-			set{
-				this.sortDirection = value;
-			}
-		}
-		public bool CaseSensitive {
-			get {
-				return caseSensitive;
-			}
-		}
+		public ListSortDirection SortDirection {get;set;}
+		
+		public bool CaseSensitive {get;set;}
+		
 		
 		#endregion
 	}

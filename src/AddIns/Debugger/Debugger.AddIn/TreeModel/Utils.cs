@@ -7,9 +7,9 @@ using System.Reflection;
 using System.Windows.Forms;
 using System.Windows.Threading;
 
+using ICSharpCode.SharpDevelop;
 using Debugger.AddIn.Pads.Controls;
 using ICSharpCode.Core;
-using ICSharpCode.NRefactory.Ast;
 using ICSharpCode.SharpDevelop.Gui;
 using ICSharpCode.SharpDevelop.Services;
 
@@ -19,7 +19,7 @@ namespace Debugger.AddIn.TreeModel
 	{
 		public static void EnqueueWork(this Process process, Dispatcher dispatcher, Action work)
 		{
-			var debuggeeStateWhenEnqueued = process.DebuggeeState;
+			long debuggeeStateWhenEnqueued = process.DebuggeeState;
 			// Always ask the scheduler to do only one piece of work at a time
 			// - this might actually be completely ok as we are not waiting anywhere between thread
 			dispatcher.BeginInvoke(
@@ -42,46 +42,39 @@ namespace Debugger.AddIn.TreeModel
 			);
 		}
 
-		public static void EnqueueForEach<T>(this Process process, Dispatcher dispatcher, IList<T> items, Action<T> work)
+		public static void EnqueueForEach<T>(this Process process, Dispatcher dispatcher, IList<T> items, Action<T> work, Action<T> failAction = null)
 		{
-			DebuggeeState debuggeeStateWhenEnqueued = process.DebuggeeState;
+			long debuggeeStateWhenEnqueued = process.DebuggeeState;
 			
-			dispatcher.BeginInvoke(
-				DispatcherPriority.Normal,
-				(Action)delegate { ProcessItems(process, dispatcher, 0, items, work, debuggeeStateWhenEnqueued); }
-			);
+			foreach (T item in items) {
+				var workItem = item;
+				dispatcher.BeginInvoke(
+					DispatcherPriority.Normal,
+					(Action)delegate {
+						if (!ProcessItem(process, workItem, work, debuggeeStateWhenEnqueued) && failAction != null)
+							failAction(workItem);
+					}
+				);
+			}
 		}
 		
-		static void ProcessItems<T>(Process process, Dispatcher dispatcher, int startIndex, IList<T> items, Action<T> work, DebuggeeState debuggeeStateWhenEnqueued)
+		static bool ProcessItem<T>(Process process, T item, Action<T> work, long debuggeeStateWhenEnqueued)
 		{
-			var watch = new System.Diagnostics.Stopwatch();
-			watch.Start();
-			
-			for (int i = startIndex; i < items.Count; i++) {
-				int index = i;
-				if (process.IsPaused && debuggeeStateWhenEnqueued == process.DebuggeeState) {
-					try {
-						// Do the work, this may recursively enqueue more work
-						work(items[index]);
-					} catch (System.Exception ex) {
-						if (process == null || process.HasExited) {
-							// Process unexpectedly exited - silently ignore
-						} else {
-							MessageService.ShowException(ex);
-						}
-						break;
+			if (process.IsPaused && debuggeeStateWhenEnqueued == process.DebuggeeState) {
+				try {
+					// Do the work, this may recursively enqueue more work
+					work(item);
+					return true;
+				} catch (System.Exception ex) {
+					if (process == null || process.HasExited) {
+						// Process unexpectedly exited - silently ignore
+					} else {
+						MessageService.ShowException(ex);
 					}
-				}
-				
-				// if we are too slow move to background
-				if (watch.ElapsedMilliseconds > 100) {
-					dispatcher.BeginInvoke(
-						DispatcherPriority.Background,
-						(Action)delegate { ProcessItems(process, dispatcher, index, items, work, debuggeeStateWhenEnqueued); }
-					);
-					break;
+					SD.Log.Error("ProcessItem cancelled", ex);
 				}
 			}
+			return false;
 		}
 		
 	}
@@ -122,9 +115,9 @@ namespace Debugger.AddIn.TreeModel
 	
 	public static class ExtensionMethods
 	{
-		public static TreeNodeWrapper ToSharpTreeNode(this TreeNode node)
+		public static SharpTreeNodeAdapter ToSharpTreeNode(this TreeNode node)
 		{
-			return new TreeNodeWrapper(node);
+			return new SharpTreeNodeAdapter(node);
 		}
 	}
 }
