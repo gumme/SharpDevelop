@@ -253,7 +253,7 @@ namespace ICSharpCode.WpfDesign.Tests.Designer
 			                         "xmlns:Controls0=\"clr-namespace:ICSharpCode.WpfDesign.Tests.Designer;assembly=ICSharpCode.WpfDesign.Tests\"",
 			                         "xmlns:sdtcontrols=\"http://sharpdevelop.net/WpfDesign/Tests/Controls\"");
 		}
-
+		
 		[Test]
 		public void PasteCustomControlUsingStaticResource()
 		{
