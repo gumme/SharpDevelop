@@ -368,7 +368,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 							if (IsSerializable(unresolvedFile))
 								fileCountParsedAndSerializable++;
 						}
-						SD.MainThread.InvokeAsyncAndForget(delegate { assemblyModel.Update(null, unresolvedFile); });
+//						SD.MainThread.InvokeAsyncAndForget(delegate { assemblyModel.Update(null, unresolvedFile); });
 						progressMonitor.Progress += fileCountInverse;
 					}
 				});
@@ -460,8 +460,10 @@ namespace ICSharpCode.SharpDevelop.Parser
 					projectContent = projectContent.RemoveAssemblyReferences(this.references).AddAssemblyReferences(newReferences);
 					this.references = newReferences.ToArray();
 					SD.ParserService.InvalidateCurrentSolutionSnapshot();
-					assemblyModel.UpdateReferences(projectContent.AssemblyReferences
-					                               .Select(ResolveReferenceForAssemblyModel).Where(r => r != null).ToList());
+					SD.MainThread.InvokeAsyncAndForget(
+						delegate {
+							assemblyModel.UpdateReferences(projectContent.AssemblyReferences.Select(ResolveReferenceForAssemblyModel).Where(r => r != null).ToList());
+						});
 				}
 			}
 		}
@@ -488,8 +490,10 @@ namespace ICSharpCode.SharpDevelop.Parser
 					this.references[index] = e.NewAssembly;
 					projectContent = projectContent.RemoveAssemblyReferences(e.OldAssembly).AddAssemblyReferences(e.NewAssembly);
 					SD.ParserService.InvalidateCurrentSolutionSnapshot();
-					assemblyModel.UpdateReferences(projectContent.AssemblyReferences
-					                               .Select(ResolveReferenceForAssemblyModel).Where(r => r != null).ToList());
+					SD.MainThread.InvokeAsyncAndForget(
+						delegate {
+							assemblyModel.UpdateReferences(projectContent.AssemblyReferences.Select(ResolveReferenceForAssemblyModel).Where(r => r != null).ToList());
+						});
 				}
 			}
 		}

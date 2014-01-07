@@ -9,19 +9,21 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Xps;
-using System.Windows.Xps.Packaging;
 
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.NRefactory.Editor;
 
-namespace ICSharpCode.AvalonEdit.AddIn
+namespace ICSharpCode.AvalonEdit.Utils
 {
 	/// <summary>
 	/// Helps printing documents.
 	/// </summary>
 	public static class DocumentPrinter
 	{
+		/// <summary>
+		/// Converts a readonly TextDocument to a Block and applies the provided highlighting definition.
+		/// </summary>
 		public static Block ConvertTextDocumentToBlock(ReadOnlyDocument document, IHighlightingDefinition highlightingDefinition)
 		{
 			IHighlighter highlighter;
@@ -32,6 +34,9 @@ namespace ICSharpCode.AvalonEdit.AddIn
 			return ConvertTextDocumentToBlock(document, highlighter);
 		}
 		
+		/// <summary>
+		/// Converts a readonly TextDocument to a Block and applies the provided highlighter.
+		/// </summary>
 		public static Block ConvertTextDocumentToBlock(IDocument document, IHighlighter highlighter)
 		{
 			if (document == null)
@@ -62,6 +67,9 @@ namespace ICSharpCode.AvalonEdit.AddIn
 			return p;
 		}
 		
+		/// <summary>
+		/// Creates a flow document from the editor's contents.
+		/// </summary>
 		public static FlowDocument CreateFlowDocumentForEditor(TextEditor editor)
 		{
 			IHighlighter highlighter = editor.TextArea.GetService(typeof(IHighlighter)) as IHighlighter;

@@ -72,6 +72,7 @@
     <Compile Include="Src\Completion\CSharpCompletionContext.cs" />
     <Compile Include="Src\Completion\CSharpInsightItem.cs" />
     <Compile Include="Src\Completion\CSharpMethodInsight.cs" />
+    <Compile Include="Src\Completion\EventCreationCompletionData.cs" />
     <Compile Include="Src\Completion\ImportCompletionData.cs" />
     <Compile Include="Src\Completion\OverrideCompletionData.cs" />
     <Compile Include="Src\Completion\OverrideEqualsGetHashCodeCompletionData.cs" />
@@ -90,7 +91,6 @@
     <Compile Include="Src\Refactoring\AbstractInlineRefactorDialog.cs" />
     <Compile Include="Src\Refactoring\ConvertInterfaceToAbstractClassContextAction.cs" />
     <Compile Include="Src\Refactoring\CreateProperties.cs" />
-    <Compile Include="Src\Refactoring\CreatePropertiesCommand.cs" />
     <Compile Include="Src\Refactoring\CreatePropertiesDialog.xaml.cs">
       <DependentUpon>CreatePropertiesDialog.xaml</DependentUpon>
     </Compile>
@@ -122,6 +122,7 @@
     </Compile>
     <Compile Include="Src\Refactoring\PropertyOrFieldWrapper.cs" />
     <Compile Include="Src\Refactoring\RenameFileToMatchTypeNameContextAction.cs" />
+    <Compile Include="Src\Refactoring\SDCodeGenerationService.cs" />
     <Compile Include="Src\Refactoring\SDNamingConventionService.cs" />
     <Compile Include="Src\Refactoring\SDRedundantUsingIssue.cs" />
     <Compile Include="Src\Refactoring\EditorScript.cs" />

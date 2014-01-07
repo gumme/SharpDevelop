@@ -11,10 +11,10 @@ namespace ICSharpCode.SharpDevelop.Dom
 	/// <summary>
 	/// Model representing list of assembly references.
 	/// </summary>
-	public class AssemblyReferencesModel : IAssemblyReferencesModel
+	class AssemblyReferencesModel : IAssemblyReferencesModel
 	{
 		IAssemblyModel parentAssemblyModel;
-		private NullSafeSimpleModelCollection<IAssemblyReferenceModel> assemblyNames;
+		NullSafeSimpleModelCollection<IAssemblyReferenceModel> assemblyNames;
 		
 		public AssemblyReferencesModel(IAssemblyModel parentAssemblyModel)
 		{
@@ -32,6 +32,12 @@ namespace ICSharpCode.SharpDevelop.Dom
 			}
 		}
 		
+		public IAssemblyModel ParentAssemblyModel {
+			get {
+				return parentAssemblyModel;
+			}
+		}
+		
 		public void Update(IReadOnlyList<DomAssemblyName> references)
 		{
 			assemblyNames.Clear();
@@ -44,7 +50,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 	/// <summary>
 	/// Model representing an assembly reference.
 	/// </summary>
-	public class AssemblyReferenceModel : IAssemblyReferenceModel
+	class AssemblyReferenceModel : IAssemblyReferenceModel
 	{
 		IAssemblyModel parentAssemblyModel;
 		DomAssemblyName assemblyName;
