@@ -19,7 +19,8 @@ using ICSharpCode.SharpDevelop.Workbench;
 
 namespace ICSharpCode.SharpDevelop.Dom.ClassBrowser
 {
-	class PersistedWorkspace
+	// Note: This class must be public for XAML serialization/deserialization!
+	public class PersistedWorkspace
 	{
 		public PersistedWorkspace()
 		{

@@ -77,7 +77,7 @@ namespace CSharpBinding.Completion
 		
 		ICompletionData ICompletionDataFactory.CreateLiteralCompletionData(string title, string description, string insertText)
 		{
-			return new CompletionData(title) {
+			return new LiteralCompletionData(title) {
 				Description = description,
 				CompletionText = insertText ?? title,
 				Image = ClassBrowserIconService.Keyword
@@ -151,7 +151,7 @@ namespace CSharpBinding.Completion
 
 		ICompletionData ICompletionDataFactory.CreateXmlDocCompletionData(string tag, string description, string tagInsertionText)
 		{
-			return new CompletionData("TODO: XmlDoc completion");
+			return new XmlDocCompletionData(tag, description, tagInsertionText);
 		}
 		#endregion
 		

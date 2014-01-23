@@ -29,7 +29,7 @@ namespace CSharpBinding.Completion
 		protected override object CreateFancyDescription()
 		{
 			return new FlowDocumentScrollViewer {
-				Document = XmlDocFormatter.CreateTooltip(type),
+				Document = XmlDocFormatter.CreateTooltip(type, false),
 				VerticalScrollBarVisibility = ScrollBarVisibility.Auto
 			};
 		}

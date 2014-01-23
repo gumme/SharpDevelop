@@ -50,6 +50,7 @@ namespace ICSharpCode.SharpDevelop.Editor
 		public FlowDocument CreateFlowDocument()
 		{
 			FlushAddedText(true);
+			flowDocument.FontSize = SD.EditorControlService.GlobalOptions.FontSize;
 			return flowDocument;
 		}
 		
@@ -211,6 +212,21 @@ namespace ICSharpCode.SharpDevelop.Editor
 			block.FontFamily = GetCodeFont();
 			if (!keepLargeMargin)
 				block.Margin = new Thickness(0, 6, 0, 6);
+			AddBlock(block);
+		}
+		
+		public void AddSignatureBlock(string signature, int currentParameterOffset, int currentParameterLength, string currentParameterName)
+		{
+			ParameterName = currentParameterName;
+			var document = new ReadOnlyDocument(signature);
+			var highlightingDefinition = HighlightingManager.Instance.GetDefinition("C#");
+			
+			var richText = DocumentPrinter.ConvertTextDocumentToRichText(document, highlightingDefinition).ToRichTextModel();
+			richText.SetFontWeight(currentParameterOffset, currentParameterLength, FontWeights.Bold);
+			var block = new Paragraph();
+			block.Inlines.AddRange(new RichText(signature, richText).CreateRuns()); // TODO richText.CreateRuns(document)
+			block.FontFamily = GetCodeFont();
+			block.TextAlignment = TextAlignment.Left;
 			AddBlock(block);
 		}
 		
