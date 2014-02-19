@@ -32,7 +32,7 @@ namespace ICSharpCode.WpfDesign.Designer.Extensions
 	/// Extends the Quick operation menu for the designer.
 	/// </summary>
 	[ExtensionFor(typeof (FrameworkElement))]
-	class QuickOperationMenuExtension : PrimarySelectionAdornerProvider
+	public class QuickOperationMenuExtension : PrimarySelectionAdornerProvider
 	{
 		private QuickOperationMenu _menu;
 		private KeyBinding _keyBinding;

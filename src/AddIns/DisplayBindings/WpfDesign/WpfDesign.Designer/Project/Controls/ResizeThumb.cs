@@ -45,7 +45,7 @@ namespace ICSharpCode.WpfDesign.Designer.Controls
 		public static readonly DependencyProperty ResizeThumbVisibleProperty
 			= DependencyProperty.Register("ResizeThumbVisible", typeof(bool), typeof(ResizeThumb), new FrameworkPropertyMetadata(true));
 		
-		internal PlacementAlignment Alignment;
+		public PlacementAlignment Alignment;
 		
 		static ResizeThumb()
 		{
