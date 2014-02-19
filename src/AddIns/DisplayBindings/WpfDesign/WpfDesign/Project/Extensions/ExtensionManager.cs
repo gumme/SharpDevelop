@@ -170,7 +170,7 @@ namespace ICSharpCode.WpfDesign.Extensions
 				
 				foreach (ExtensionForAttribute designerFor in extensionForAttributes) {
 					ExtensionServer server = GetServerForExtension(type);
-					AddExtensionEntry(designerFor.DesignedItemType, new ExtensionEntry(type, server, designerFor.OverrideExtension));
+					AddExtensionEntry(designerFor.DesignedItemType, new ExtensionEntry(type, server, designerFor.OverrideExtensions.ToList()));
 				}
 			}
 		}
