@@ -14,7 +14,7 @@ namespace ICSharpCode.WpfDesign.Designer.Controls
     /// <summary>
     /// Display height of the element.
     /// </summary>
-    class HeightDisplay : Control
+    public class HeightDisplay : Control
     {
         static HeightDisplay()
         {
@@ -25,7 +25,7 @@ namespace ICSharpCode.WpfDesign.Designer.Controls
     /// <summary>
     /// Display width of the element.
     /// </summary>
-    class WidthDisplay : Control
+    public class WidthDisplay : Control
     {
         static WidthDisplay()
         {

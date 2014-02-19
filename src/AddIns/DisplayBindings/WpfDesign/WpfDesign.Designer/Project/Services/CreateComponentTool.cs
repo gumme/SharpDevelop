@@ -5,6 +5,7 @@ using System.Windows;
 using System;
 using System.Diagnostics;
 using System.Windows.Input;
+using System.Windows.Controls;
 using ICSharpCode.WpfDesign.Adorners;
 using ICSharpCode.WpfDesign.Designer.Controls;
 
@@ -161,7 +162,12 @@ namespace ICSharpCode.WpfDesign.Designer.Services
 
 		internal static bool AddItemWithCustomSize(DesignItem container, DesignItem createdItem, Point position, Size size)
 		{
-			
+			bool b = createdItem.View.GetType().AnyIsInNamespace("System.Windows.Shapes");
+            if (b) 
+            {
+                createdItem.View.SetValue(Canvas.LeftProperty, position.X);
+                createdItem.View.SetValue(Canvas.TopProperty, position.Y);
+            }
 			PlacementOperation operation = PlacementOperation.TryStartInsertNewComponents(
 				container,
 				new DesignItem[] { createdItem },
