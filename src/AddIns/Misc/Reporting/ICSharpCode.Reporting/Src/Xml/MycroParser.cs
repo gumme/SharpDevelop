@@ -1,11 +1,21 @@
-﻿/*
- * Created by SharpDevelop.
- * User: Peter Forstmeier
- * Date: 19.03.2013
- * Time: 20:14
- * 
- * To change this template use Tools | Options | Coding | Edit Standard Headers.
- */
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -48,23 +58,23 @@ namespace ICSharpCode.Reporting.Xml
 				// instantiate the class
 				string ns=node.Prefix;
 				string cname=node.LocalName;
-				Console.WriteLine ("ProcessNode(XmlNode node, object parent)  {0}",cname);
-				Type t=GetTypeByName(ns, cname);
-				if (t == null) {
-					Console.WriteLine("\t Not found {0}",t.FullName);
-//					t = GetTypeByName (ns,"ErrorItem");
-				}
 				
-				Trace.Assert(t != null, "Type "+cname+" could not be determined.");
+				Console.WriteLine ("ProcessNode(XmlNode node, object parent)  {0}",cname);
+			
+				Type t=GetTypeByName(ns, cname);
+			
+//				Trace.Assert(t != null, "Type "+cname+" could not be determined.");
 //				Debug.WriteLine("Looking for " + cname + " and got " + t.FullName);
-				Console.WriteLine("Looking for " + cname + " and got " + t.FullName);
+//				Console.WriteLine("Looking for " + cname + " and got " + t.FullName);
 				try
 				{
 					ret=Activator.CreateInstance(t);
 				}
-				catch(Exception e)
+				catch(Exception)
 				{
-					Trace.Fail("Type "+cname+" could not be instantiated:\r\n"+e.Message);
+					Console.WriteLine("MycroParser:");
+					Console.WriteLine("\t Not found {0}",cname);
+//					Trace.Fail("Type "+cname+" could not be instantiated:\r\n"+e.Message);
 				}
 
 				// support the ISupportInitialize interface
@@ -97,8 +107,10 @@ namespace ICSharpCode.Reporting.Xml
 			return ret;
 		}
 
+	    
 		protected void ProcessChildProperties(XmlNode node, object parent)
 		{
+			
 			var t=parent.GetType();
 
 			// children of a class must always be properties
@@ -106,6 +118,7 @@ namespace ICSharpCode.Reporting.Xml
 			{
 			    if (!(child is XmlElement)) continue;
 			    string pname=child.LocalName;
+			
 			    var pi=t.GetProperty(pname);
 
 			    if (pi==null)
@@ -208,7 +221,6 @@ namespace ICSharpCode.Reporting.Xml
 
 	    static void SetPropertyToString(object obj, PropertyInfo pi, string value)
 		{
-			Console.WriteLine("MP - SetPropertyToString {0} - {1}",pi.Name,value.ToString());
 			// it's string, so use a type converter.
 			TypeConverter tc=TypeDescriptor.GetConverter(pi.PropertyType);
 			try

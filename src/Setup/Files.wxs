@@ -249,9 +249,6 @@
 									<Component Id="OpenCoverLog4netDll" Guid="DFF17E8D-D634-49D2-B53B-B0F190C12245" DiskId="1">
 										<File Id="OpenCover.log4net.dll" Name="log4net.dll" Source="..\..\bin\Tools\OpenCover\log4net.dll" KeyPath="yes" Assembly=".net" AssemblyApplication="OpenCover.log4net.dll" AssemblyManifest="OpenCover.log4net.dll" />
 									</Component>
-									<Component Id="OpenCoverMicrosoftPracticesUnityDll" Guid="E7EF4E31-5136-4303-9389-359E8BB7905E" DiskId="1">
-										<File Id="OpenCover.Microsoft.Practices.Unity.dll" Name="Microsoft.Practices.Unity.dll" Source="..\..\bin\Tools\OpenCover\Microsoft.Practices.Unity.dll" KeyPath="yes" Assembly=".net" AssemblyApplication="OpenCover.Microsoft.Practices.Unity.dll" AssemblyManifest="OpenCover.Microsoft.Practices.Unity.dll" />
-									</Component>
 									<Component Id="OpenCoverMonoCecilDll" Guid="8B24DEA5-45FB-4D99-A9EE-71CACDA1993B" DiskId="1">
 										<File Id="OpenCover.Mono.Cecil.dll" Name="Mono.Cecil.dll" Source="..\..\bin\Tools\OpenCover\Mono.Cecil.dll" KeyPath="yes" Assembly=".net" AssemblyApplication="OpenCover.Mono.Cecil.dll" AssemblyManifest="OpenCover.Mono.Cecil.dll" />
 									</Component>
@@ -277,6 +274,15 @@
 											<File Id="OpenCover.Profiler.x86.dll" Name="OpenCover.Profiler.dll" Source="..\..\bin\Tools\OpenCover\x86\OpenCover.Profiler.dll" KeyPath="yes" />
 										</Component>
 									</Directory>
+									<Component Id="OpenCoverAutofacConfigurationDll" Guid="C9F29A3E-67FF-4A66-B709-1FFBB7242F18" DiskId="1">
+										<File Id="OpenCover.Autofac.Configuration.dll" Name="Autofac.Configuration.dll" Source="..\..\bin\Tools\OpenCover\Autofac.Configuration.dll" KeyPath="yes" Assembly=".net" AssemblyApplication="OpenCover.Autofac.Configuration.dll" AssemblyManifest="OpenCover.Autofac.Configuration.dll" />
+									</Component>
+									<Component Id="OpenCoverAutofacDll" Guid="31671972-7979-4E76-8508-246B23267391" DiskId="1">
+										<File Id="OpenCover.Autofac.dll" Name="Autofac.dll" Source="..\..\bin\Tools\OpenCover\Autofac.dll" KeyPath="yes" Assembly=".net" AssemblyApplication="OpenCover.Autofac.dll" AssemblyManifest="OpenCover.Autofac.dll" />
+									</Component>
+									<Component Id="OpenCoverExtensionsDll" Guid="C0E73A83-C37B-4C71-834D-9D1626F2F1AA" DiskId="1">
+										<File Id="OpenCover.Extensions.dll" Name="OpenCover.Extensions.dll" Source="..\..\bin\Tools\OpenCover\OpenCover.Extensions.dll" KeyPath="yes" Assembly=".net" AssemblyApplication="OpenCover.Extensions.dll" AssemblyManifest="OpenCover.Extensions.dll" />
+									</Component>
 								</Directory>
 							</Directory>
 							<Component Guid="2EC34D8A-CF14-4E1F-A512-9A596A1C256D" Id="ICSharpCodeCoreWinFormsDll" DiskId="1">
@@ -439,7 +445,6 @@
 									<File Source="..\..\data\schemas\AddIn.xsd" Name="AddIn.xsd" Id="AddIn.xsd" />
 									<File Source="..\..\data\schemas\appconfig.xsd" Id="appconfig.xsd" Name="appconfig.xsd" />
 									<File Source="..\..\data\schemas\manifest.xsd" Name="manifest.xsd" Id="manifest.xsd" />
-									<File Source="..\..\data\schemas\nant.xsd" Name="nant.xsd" Id="nant.xsd" />
 									<File Source="..\..\data\schemas\readme.txt" Name="readme.txt" Id="readme.txt" />
 									<File Source="..\..\data\schemas\W3C-License.html" Id="W3C_License.html" Name="W3C-License.html" />
 									<File Source="..\..\data\schemas\wix.xsd" Name="wix.xsd" Id="Schemas.wix.xsd" />
@@ -853,12 +858,12 @@
 										</Directory>
 									</Directory>
 								</Directory>
-								<Directory Id="CodeQualityFolder" Name="CodeQuality">
+								<!--<Directory Id="CodeQualityFolder" Name="CodeQuality">
 									<Component Guid="E821D255-269F-44BB-992E-BC98B8349B1C" Id="CodeQualityFiles" DiskId="1">
 										<File Source="..\..\AddIns\Analysis\CodeQuality\ICSharpCode.CodeQuality.dll" Id="ICSharpCode.CodeQuality.dll" Name="ICSharpCode.CodeQuality.dll" Assembly=".net" AssemblyApplication="ICSharpCode.CodeQuality.dll" AssemblyManifest="ICSharpCode.CodeQuality.dll" KeyPath="yes" />
 										<File Source="..\..\AddIns\Analysis\CodeQuality\CodeQuality.addin" Id="CodeQuality.addin" Name="CodeQuality.addin" />
 									</Component>
-								</Directory>
+								</Directory>-->
 							</Directory>
 							<Directory Id="BackendBindingsFolder" Name="BackendBindings">
 								<Directory Id="CSharpBindingFolder" Name="CSharpBinding">
@@ -1480,24 +1485,23 @@
 										<File Source="..\..\AddIns\Misc\UsageDataCollector\UsageDataCollector.xml" Name="UsageDataCollector.xml" Id="UsageDataCollector.xml" />
 									</Component>
 								</Directory>
-								<Directory Id="SharpDevelopReports" Name="SharpDevelopReports">
-									<Component Guid="9D0B24E0-6BE3-4E0A-AE50-DFF55BAE388F" Id="SharpDevelopReportsEmptyReportFileTemplate" DiskId="1">
-										<File Source="..\..\AddIns\Misc\SharpDevelopReports\EmptyReport.xft" Name="EmptyReport.xft" Id="SharpDevelopReportsEmptyReport.xft" KeyPath="yes" />
+								<Directory Id="SharpDevelopReporting" Name="SharpDevelopReporting">
+									<Component Guid="3FCFB7F3-73FD-41EB-BE9D-01CC773F9E35" Id="SharpDevelopReportingEmptyReportFileTemplate" DiskId="1">
+										<File Source="..\..\AddIns\Misc\SharpDevelopReporting\EmptyReport.xft" Name="EmptyReport.xft" Id="SharpDevelopReportingEmptyReport.xft" KeyPath="yes" />
 									</Component>
-									<Component Guid="70F6CB6E-5776-4157-BABB-1D01960CFD42" Id="ICSharpCodeReportDesignerAddin" DiskId="1">
-										<File Source="..\..\AddIns\Misc\SharpDevelopReports\ICSharpCode.ReportDesigner.addin" Name="ICSharpCode.ReportDesigner.addin" Id="ICSharpCode.ReportDesigner.addin" KeyPath="yes" />
+									<Component Guid="5BE15CE6-CE1D-49D3-93E4-E4BB37B15CA4" Id="ICSharpCodeReportingAddin" DiskId="1">
+										<File Source="..\..\AddIns\Misc\SharpDevelopReporting\ICSharpCode.Reporting.Addin.dll" Name="ICSharpCode.Reporting.Addin.dll" Id="ICSharpCode.Reporting.Addin.dll" KeyPath="yes" />
+										<File Source="..\..\AddIns\Misc\SharpDevelopReporting\ICSharpCode.Reporting.addin" Name="ICSharpCode.Reporting.addin" Id="ICSharpCode.Reporting.addin" />
 									</Component>
-									<Component Guid="368CD4A5-70EA-4374-AF4E-A4328DE66680" Id="ICSharpCodeReportsAddinDll" DiskId="1">
-										<File Source="..\..\AddIns\Misc\SharpDevelopReports\ICSharpCode.Reports.Addin.dll" Name="ICSharpCode.Reports.Addin.dll" Id="ICSharpCode.Reports.Addin.dll" KeyPath="yes" Assembly=".net" AssemblyApplication="ICSharpCode.Reports.Addin.dll" AssemblyManifest="ICSharpCode.Reports.Addin.dll" />
+									<Component Guid="274B5B10-3E3C-47E7-980F-F9277C8C6630" Id="ICSharpCodeReportingDll" DiskId="1">
+										<File Source="..\..\AddIns\Misc\SharpDevelopReporting\ICSharpCode.Reporting.dll" Name="ICSharpCode.Reporting.dll" Id="ICSharpCode.Reporting.dll" KeyPath="yes" />
 									</Component>
-									<Component Guid="0836040D-7E4A-42CA-A291-BE8AAB207D29" Id="ICSharpCodeReportsCoreDll" DiskId="1">
-										<File Source="..\..\AddIns\Misc\SharpDevelopReports\ICSharpCode.Reports.Core.dll" Name="ICSharpCode.Reports.Core.dll" Id="ICSharpCode.Reports.Core.dll" KeyPath="yes" Assembly=".net" AssemblyApplication="ICSharpCode.Reports.Core.dll" AssemblyManifest="ICSharpCode.Reports.Core.dll" />
+									<Component Guid="2D7402AE-2F6D-40D0-9A25-757BD99CD0AF" Id="IronyDll" DiskId="1">
+										<File Source="..\..\AddIns\Misc\SharpDevelopReporting\Irony.dll" Name="Irony.dll" Id="Irony.dll" KeyPath="yes" />
+										<File Source="..\..\AddIns\Misc\SharpDevelopReporting\Irony.Interpreter.dll" Name="Irony.Interpreter.dll" Id="Irony.Interpreter.dll" />
 									</Component>
-									<Component Guid="DBF1DA4F-19BA-46AF-86A4-B3228424F219" Id="IronyDll" DiskId="1">
-										<File Source="..\..\AddIns\Misc\SharpDevelopReports\Irony.dll" Name="Irony.dll" Id="Irony.dll" KeyPath="yes" />
-									</Component>
-									<Component Guid="A105D4E4-2AF4-43BE-AA71-15F14DA4163B" Id="ITextSharpDll" DiskId="1">
-										<File Source="..\..\AddIns\Misc\SharpDevelopReports\itextsharp.dll" Name="itextsharp.dll" Id="itextsharp.dll" KeyPath="yes" />
+									<Component Guid="3AA38468-F3F9-4F73-BF59-1DB0A1EBE96F" Id="PdfSharpDll" DiskId="1">
+										<File Source="..\..\AddIns\Misc\SharpDevelopReporting\PdfSharp.dll" Name="PdfSharp.dll" Id="PdfSharp.dll" KeyPath="yes" />
 									</Component>
 								</Directory>
 								<Directory Id="PackageManagement" Name="PackageManagement">
@@ -1574,6 +1578,9 @@
 									</Component>
 									<Component Id="AddInManager2NuGetCoreDll" Guid="29F6AA62-469E-429D-B8F9-2E087093A1E9" DiskId="1">
 										<File Id="AddInManager2.NuGet.Core.dll" Name="NuGet.Core.dll" Source="..\..\AddIns\Misc\AddInManager2\NuGet.Core.dll" KeyPath="yes" Assembly=".net" AssemblyApplication="AddInManager2.NuGet.Core.dll" AssemblyManifest="AddInManager2.NuGet.Core.dll" />
+									</Component>
+									<Component Id="AddInManager2MSWebXmlTransformDll" Guid="77C7E729-DB5A-4754-BF30-706760D3CE8C" DiskId="1">
+										<File Id="AddInManager2.Microsoft.Web.XmlTransform.dll" Name="Microsoft.Web.XmlTransform.dll" Source="..\..\AddIns\Misc\AddInManager2\Microsoft.Web.XmlTransform.dll" KeyPath="yes" Assembly=".net" AssemblyApplication="AddInManager2.Microsoft.Web.XmlTransform.dll" AssemblyManifest="AddInManager2.Microsoft.Web.XmlTransform.dll" />
 									</Component>
 								</Directory>
 							</Directory>

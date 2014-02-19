@@ -157,6 +157,7 @@ namespace ICSharpCode.NRefactory.CSharp
 				}
 				node.AcceptVisitor(this);
 			}
+			nextStatementIndent = null;
 			if (pushed)
 				curIndent.Pop();
 			if (beginBraceAction != null && endBraceAction != null) {
@@ -352,7 +353,7 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		public override void VisitCaseLabel(CaseLabel caseLabel)
 		{
-			FixSemicolon(caseLabel.ColonToken);
+			ForceSpacesBefore(caseLabel.ColonToken, false);
 		}
 
 		public override void VisitThrowStatement(ThrowStatement throwStatement)

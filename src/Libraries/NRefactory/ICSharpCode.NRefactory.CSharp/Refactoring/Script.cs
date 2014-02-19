@@ -222,7 +222,16 @@ namespace ICSharpCode.NRefactory.CSharp.Refactoring
 			output.RegisterTrackedSegments(this, startOffset);
 			CorrectFormatting (null, newNode);
 		}
-
+	
+		public void AddTo(TypeDeclaration typeDecl, EntityDeclaration entityDecl)
+		{
+			var startOffset = GetCurrentOffset(typeDecl.LBraceToken.EndLocation);
+			var output = OutputNode(1 + GetIndentLevelAt(startOffset), entityDecl, true);
+			InsertText(startOffset, output.Text);
+			output.RegisterTrackedSegments(this, startOffset);
+			CorrectFormatting (null, entityDecl);
+		}
+		
 		/// <summary>
 		/// Changes the modifier of a given entity declaration.
 		/// </summary>
@@ -492,7 +501,7 @@ namespace ICSharpCode.NRefactory.CSharp.Refactoring
 			{
 				int startOffset = stringWriter.GetStringBuilder ().Length;
 				int endOffset = startOffset + (identifier.Name ?? "").Length + (identifier.IsVerbatim ? 1 : 0);
-				NewSegments.Add(new KeyValuePair<AstNode, Segment>(identifier, new Segment(startOffset, endOffset)));
+				NewSegments.Add(new KeyValuePair<AstNode, Segment>(identifier, new Segment(startOffset, endOffset - startOffset)));
 				base.WriteIdentifier (identifier);
 			}
 			

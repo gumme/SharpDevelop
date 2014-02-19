@@ -1,10 +1,24 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using ICSharpCode.Core;
 using ICSharpCode.PackageManagement;
 using ICSharpCode.PackageManagement.Design;
@@ -72,6 +86,12 @@ namespace PackageManagement.Tests
 			var package = new FakePackage(packageId);
 			fakeSolutionPackageRepository.FakePackagesByReverseDependencyOrder.Add(package);
 			return package;
+		}
+		
+		void AddNonMSBuildBasedProjectToOpenProjects()
+		{
+			IProject project = MockRepository.GenerateStub<IProject>();
+			fakeProjectService.AddProject(project);
 		}
 		
 		[Test]
@@ -562,7 +582,7 @@ namespace PackageManagement.Tests
 		}
 		
 		[Test]
-		public void GetPackages_OnePackageInstalledIntoOneProjectButTwoPackagesInSolutionRepository_ReturnsOnlyPackageInstalled()
+		public void GetPackages_OnePackageInstalledIntoOneProjectButTwoPackagesInSolutionRepository_ReturnsAllPackages()
 		{
 			CreateSolution();
 			fakeProjectService.CurrentProject = null;
@@ -580,24 +600,81 @@ namespace PackageManagement.Tests
 			IQueryable<IPackage> packages = solution.GetPackages();
 			
 			var expectedPackages = new FakePackage[] {
+				notInstalledPackage,
 				installedPackage
 			};
+			
+			Assert.AreEqual(expectedPackages, packages);
 		}
 		
 		[Test]
-		public void GetPackages_TwoProjectsButNoPackagesInstalled_PackageProjectsCreatedUsingActiveRepository()
+		public void GetInstalledPackages_OnePackageInstalledIntoOneProjectButTwoPackagesInSolutionRepository_ReturnsOnlyPackageInstalled()
+		{
+			CreateSolution();
+			fakeProjectService.CurrentProject = null;
+			TestableProject testProject = AddProjectToOpenProjects("Test");
+			var project = new FakePackageManagementProject();
+			fakeProjectFactory.CreatePackageManagementProject = (repository, msbuildProject) => {
+				return project;
+			};
+			FakePackage notInstalledPackage = FakePackage.CreatePackageWithVersion("NotInstalled", "1.0.0.0");
+			fakeSolutionPackageRepository.FakeSharedRepository.FakePackages.Add(notInstalledPackage);
+			FakePackage installedPackage = FakePackage.CreatePackageWithVersion("Installed", "1.0.0.0");
+			fakeSolutionPackageRepository.FakeSharedRepository.FakePackages.Add(installedPackage);
+			project.FakePackages.Add(installedPackage);
+			
+			IQueryable<IPackage> packages = solution.GetInstalledPackages();
+			
+			var expectedPackages = new FakePackage[] {
+				installedPackage
+			};
+			
+			Assert.AreEqual(expectedPackages, packages);
+		}
+		
+		[Test]
+		public void GetInstalledPackages_TwoProjectsButNoPackagesInstalled_PackageProjectsCreatedUsingActiveRepository()
 		{
 			CreateSolution();
 			fakeProjectService.CurrentProject = null;
 			TestableProject testProject1 = AddProjectToOpenProjects("Test1");
 			TestableProject testProject2 = AddProjectToOpenProjects("Test2");
 			
-			IQueryable<IPackage> packages = solution.GetPackages();
+			IQueryable<IPackage> packages = solution.GetInstalledPackages();
 			
 			Assert.AreEqual(testProject1, fakeProjectFactory.ProjectsPassedToCreateProject[0]);
 			Assert.AreEqual(testProject2, fakeProjectFactory.ProjectsPassedToCreateProject[1]);
 			Assert.AreEqual(fakeRegisteredPackageRepositories.ActiveRepository, fakeProjectFactory.RepositoriesPassedToCreateProject[0]);
 			Assert.AreEqual(fakeRegisteredPackageRepositories.ActiveRepository, fakeProjectFactory.RepositoriesPassedToCreateProject[1]);
+		}
+		
+		[Test]
+		public void GetMSBuildProjects_TwoProjectsInOpenSolutionButOneIsNotMSBuildBased_ReturnsOneMSBuildBasedProject()
+		{
+			CreateSolution();
+			TestableProject project = AddProjectToOpenProjects("A");
+			AddNonMSBuildBasedProjectToOpenProjects();
+			
+			IEnumerable<IProject> projects = solution.GetMSBuildProjects();
+			var expectedProjects = new IProject[] { project };
+			
+			CollectionAssert.AreEqual(expectedProjects, projects);
+		}
+		
+		[Test]
+		public void GetPackages_OnePackageInstalledIntoPackagesFolderOnly_ReturnsOnePackage()
+		{
+			CreateSolution();
+			fakeProjectService.CurrentProject = null;
+			FakePackage fakePackage = FakePackage.CreatePackageWithVersion("One", "1.0");
+			fakeSolutionPackageRepository.FakeSharedRepository.FakePackages.Add(fakePackage);
+			
+			IQueryable<IPackage> packages = solution.GetPackages();
+			
+			var expectedPackages = new FakePackage[] {
+				fakePackage
+			};
+			Assert.AreEqual(expectedPackages, packages);
 		}
 	}
 }

@@ -1,13 +1,27 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.ComponentModel;
 using System.IO;
 
 using ICSharpCode.Core;
+using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.SharpDevelop;
-using ICSharpCode.SharpDevelop.Dom;
 using ICSharpCode.SharpDevelop.Project;
 using SD = ICSharpCode.SharpDevelop.Project;
 
@@ -40,20 +54,22 @@ namespace ICSharpCode.PackageManagement.EnvDTE
 			return new FileProjectItems(this);
 		}
 		
-		internal static ProjectItem FindByEntity(IProject project, IEntityModel entity)
+		internal static ProjectItem FindByEntity(IProject project, IEntity entity)
 		{
-			throw new NotImplementedException();
+			if (entity.Region.FileName != null) {
+				return FindByFileName(project, entity.Region.FileName);
+			}
+			return null;
 		}
 		
-//		internal ProjectItem(MSBuildBasedProject project, IClass c)
-//			: this(new Project(project), project.FindFile(c.CompilationUnit.FileName))
-//		{
-//		}
-//		
-//		internal ProjectItem(IProjectContent projectContent, IClass c)
-//			: this((MSBuildBasedProject)projectContent.Project, c)
-//		{
-//		}
+		internal static ProjectItem FindByFileName(IProject project, string fileName)
+		{
+			SD.FileProjectItem item = project.FindFile(new FileName(fileName));
+			if (item != null) {
+				return new ProjectItem(new Project(project as MSBuildBasedProject), item);
+			}
+			return null;
+		}
 		
 		string GetKindFromFileProjectItemType()
 		{
@@ -155,12 +171,19 @@ namespace ICSharpCode.PackageManagement.EnvDTE
 		
 		public global::EnvDTE.FileCodeModel2 FileCodeModel {
 			get {
-//				if (!IsDirectory) {
-//					return new FileCodeModel2(containingProject, projectItem);
-//				}
-//				return null;
-				throw new NotImplementedException();
+				if (!IsDirectory) {
+					return new FileCodeModel2(CreateModelContext(), containingProject);
+				}
+				return null;
 			}
+		}
+		
+		CodeModelContext CreateModelContext()
+		{
+			return new CodeModelContext {
+				CurrentProject = containingProject.MSBuildProject,
+				FilteredFileName = projectItem.FileName
+			};
 		}
 		
 		internal string GetIncludePath(string fileName)

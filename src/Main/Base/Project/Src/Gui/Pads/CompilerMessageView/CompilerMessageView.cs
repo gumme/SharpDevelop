@@ -1,5 +1,20 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
@@ -9,6 +24,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -162,7 +178,7 @@ namespace ICSharpCode.SharpDevelop.Gui
 		#endregion
 		
 		TextEditor textEditor = new TextEditor();
-		DockPanel panel = new DockPanel();
+		Grid panel = new Grid();
 		ToolBar toolStrip;
 		
 		List<MessageViewCategory> messageCategories = new List<MessageViewCategory>();
@@ -236,7 +252,6 @@ namespace ICSharpCode.SharpDevelop.Gui
 			AddCategory(TaskService.BuildMessageViewCategory);
 			
 			textEditor.IsReadOnly = true;
-			
 			textEditor.ContextMenu = MenuService.CreateContextMenu(this, "/SharpDevelop/Pads/CompilerMessageView/ContextMenu");
 			
 			properties = PropertyService.NestedProperties(OutputWindowOptionsPanel.OutputWindowsProperty);
@@ -249,10 +264,14 @@ namespace ICSharpCode.SharpDevelop.Gui
 			textEditor.TextArea.TextView.ElementGenerators.OfType<LinkElementGenerator>().ForEach(x => x.RequireControlModifierForClick = false);
 			
 			toolStrip = ToolBarService.CreateToolBar(panel, this, "/SharpDevelop/Pads/CompilerMessageView/Toolbar");
-			toolStrip.SetValue(DockPanel.DockProperty, Dock.Top);
+			toolStrip.Items.OfType<ComboBox>().ForEach(b => b.MinWidth = 75);
+			
+			panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+			panel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
 			
 			panel.Children.Add(toolStrip);
 			panel.Children.Add(textEditor);
+			Grid.SetRow(textEditor, 1);
 			
 			SetWordWrap();
 			DisplayActiveCategory();

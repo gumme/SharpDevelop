@@ -477,6 +477,10 @@ namespace ICSharpCode.NRefactory.TypeSystem.Implementation
 			return Methods.Any(m => m.IsExtensionMethod);
 		}
 		
+		public bool IsPartial {
+			get { return parts.Length > 1 || parts[0].IsPartial; }
+		}
+		
 		public bool? IsReferenceType {
 			get {
 				switch (this.Kind) {
@@ -704,6 +708,11 @@ namespace ICSharpCode.NRefactory.TypeSystem.Implementation
 					asmRef = null;
 				return new GetClassTypeReference(asmRef, this.Namespace, this.Name, this.TypeParameterCount);
 			}
+		}
+		
+		ISymbolReference ISymbol.ToReference()
+		{
+			return (ISymbolReference)ToTypeReference();
 		}
 		
 		public IEnumerable<IType> GetNestedTypes(Predicate<ITypeDefinition> filter = null, GetMemberOptions options = GetMemberOptions.None)

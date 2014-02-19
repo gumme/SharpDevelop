@@ -1,5 +1,20 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
@@ -47,21 +62,6 @@ namespace ICSharpCode.Core
 		}
 		
 		/// <summary>
-		/// Checks if the collection contains an item. Runtime: O(n).
-		/// </summary>
-		public bool Contains(T item)
-		{
-			if (item == null)
-				throw new ArgumentNullException("item");
-			CheckNoEnumerator();
-			foreach (T element in this) {
-				if (item.Equals(element))
-					return true;
-			}
-			return false;
-		}
-		
-		/// <summary>
 		/// Removes an element from the collection. Returns true if the item is found and removed,
 		/// false when the item is not found.
 		/// Runtime: O(n).
@@ -69,13 +69,14 @@ namespace ICSharpCode.Core
 		public bool Remove(T item)
 		{
 			if (item == null)
-				throw new ArgumentNullException("item");
+				return false;
 			CheckNoEnumerator();
+			var comparer = EqualityComparer<T>.Default;
 			for (int i = 0; i < innerList.Count;) {
 				T element = (T)innerList[i].Target;
 				if (element == null) {
 					RemoveAt(i);
-				} else if (element == item) {
+				} else if (comparer.Equals(element, item)) {
 					RemoveAt(i);
 					return true;
 				} else {

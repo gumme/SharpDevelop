@@ -53,7 +53,7 @@ namespace ICSharpCode.NRefactory.CSharp.Refactoring
 
 		class GatherVisitor : GatherVisitorBase<FieldCanBeMadeReadOnlyIssue>
 		{
-			readonly Stack<List<Tuple<VariableInitializer, IVariable>>> fieldStack = new Stack<List<Tuple<VariableInitializer, IVariable>>>();
+			readonly Stack<List<Tuple<VariableInitializer, IVariable, VariableState>>> fieldStack = new Stack<List<Tuple<VariableInitializer, IVariable, VariableState>>>();
 
 			public GatherVisitor(BaseRefactoringContext context) : base (context)
 			{
@@ -62,6 +62,8 @@ namespace ICSharpCode.NRefactory.CSharp.Refactoring
 			void Collect()
 			{
 				foreach (var varDecl in fieldStack.Peek()) {
+					if (varDecl.Item3 == VariableState.None)
+						continue;
 					AddIssue(new CodeIssue(
 						varDecl.Item1.NameToken,
 						ctx.TranslateString("Convert to readonly"),
@@ -76,7 +78,7 @@ namespace ICSharpCode.NRefactory.CSharp.Refactoring
 
 			public override void VisitTypeDeclaration(TypeDeclaration typeDeclaration)
 			{	
-				var list = new List<Tuple<VariableInitializer, IVariable>>();
+				var list = new List<Tuple<VariableInitializer, IVariable, VariableState>>();
 				fieldStack.Push(list);
 
 				foreach (var fieldDeclaration in ConvertToConstantIssue.CollectFields (this, typeDeclaration)) {
@@ -88,13 +90,22 @@ namespace ICSharpCode.NRefactory.CSharp.Refactoring
 						continue;
 					var variable = fieldDeclaration.Variables.First();
 					var rr = ctx.Resolve(fieldDeclaration.ReturnType);
-					if ((rr.Type.IsReferenceType.HasValue && !rr.Type.IsReferenceType.Value) && (ctx.Resolve (variable.Initializer) is ConstantResolveResult))
-						continue;
+					if (rr.Type.IsReferenceType == false) {
+						// Value type:
+						var def = rr.Type.GetDefinition();
+						if (def != null && def.KnownTypeCode == KnownTypeCode.None) {
+							// user-defined value type -- might be mutable
+							continue;
+						} else if (ctx.Resolve (variable.Initializer) is ConstantResolveResult) {
+							// handled by ConvertToConstantIssue
+							continue;
+						}
+					}
 
 					var mr = ctx.Resolve(variable) as MemberResolveResult;
 					if (mr == null)
 						continue;
-					list.Add(Tuple.Create(variable, mr.Member as IVariable)); 
+					list.Add(Tuple.Create(variable, mr.Member as IVariable, VariableState.None)); 
 				}
 				base.VisitTypeDeclaration(typeDeclaration);
 				Collect();
@@ -103,9 +114,22 @@ namespace ICSharpCode.NRefactory.CSharp.Refactoring
 
 			public override void VisitConstructorDeclaration(ConstructorDeclaration constructorDeclaration)
 			{
+
 				foreach (var node in constructorDeclaration.Descendants) {
 					if (node is AnonymousMethodExpression || node is LambdaExpression) {
 						node.AcceptVisitor(this);
+					} else {
+						var assignmentAnalysis = new ConvertToConstantIssue.VariableUsageAnalyzation (ctx);
+						var newVars = new List<Tuple<VariableInitializer, IVariable, VariableState>>();
+						node.AcceptVisitor(assignmentAnalysis); 
+						foreach (var variable in fieldStack.Pop()) {
+							var state = assignmentAnalysis.GetStatus(variable.Item2);
+							if (variable.Item3 > state)
+								state = variable.Item3;
+							newVars.Add(new Tuple<VariableInitializer, IVariable, VariableState> (variable.Item1, variable.Item2, state));
+						}
+						fieldStack.Push(newVars);
+
 					}
 				}
 			}
@@ -113,14 +137,15 @@ namespace ICSharpCode.NRefactory.CSharp.Refactoring
 			public override void VisitBlockStatement(BlockStatement blockStatement)
 			{
 				var assignmentAnalysis = new ConvertToConstantIssue.VariableUsageAnalyzation (ctx);
-				var newVars = new List<Tuple<VariableInitializer, IVariable>>();
+				var newVars = new List<Tuple<VariableInitializer, IVariable, VariableState>>();
 				blockStatement.AcceptVisitor(assignmentAnalysis); 
-				foreach (var variable in fieldStack.Pop()) {
-					if (assignmentAnalysis.GetStatus(variable.Item2) == VariableState.Changed)
-						continue;
-					newVars.Add(variable);
-				}
-				fieldStack.Push(newVars);
+					foreach (var variable in fieldStack.Pop()) {
+						var state = assignmentAnalysis.GetStatus(variable.Item2);
+						if (state == VariableState.Changed)
+							continue;
+						newVars.Add(new Tuple<VariableInitializer, IVariable, VariableState> (variable.Item1, variable.Item2, state));
+					}
+					fieldStack.Push(newVars);
 			}
 		}
 	}
