@@ -1,5 +1,20 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.ComponentModel;
@@ -219,6 +234,21 @@ namespace ICSharpCode.AvalonEdit.Editing
 							string newLine = TextUtilities.GetNewLineFromDocument(textArea.Document, textArea.Caret.Line);
 							text = TextUtilities.NormalizeNewLines(text, newLine);
 							
+							string pasteFormat;
+							// fill the suggested DataFormat used for the paste action:
+							if (rectangular)
+								pasteFormat = RectangleSelection.RectangularSelectionDataType;
+							else
+								pasteFormat = DataFormats.UnicodeText;
+							
+							var pastingEventArgs = new DataObjectPastingEventArgs(e.Data, true, pasteFormat);
+							textArea.RaiseEvent(pastingEventArgs);
+							if (pastingEventArgs.CommandCancelled)
+								return;
+							
+							// DataObject.PastingEvent handlers might have changed the format to apply.
+							rectangular = pastingEventArgs.FormatToApply == RectangleSelection.RectangularSelectionDataType;
+							
 							// Mark the undo group with the currentDragDescriptor, if the drag
 							// is originating from the same control. This allows combining
 							// the undo groups when text is moved.
@@ -304,6 +334,11 @@ namespace ICSharpCode.AvalonEdit.Editing
 					allowedEffects &= ~DragDropEffects.Move;
 				}
 			}
+			
+			var copyingEventArgs = new DataObjectCopyingEventArgs(dataObject, true);
+			textArea.RaiseEvent(copyingEventArgs);
+			if (copyingEventArgs.CommandCancelled)
+				return;
 			
 			object dragDescriptor = new object();
 			this.currentDragDescriptor = dragDescriptor;

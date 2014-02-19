@@ -1,62 +1,68 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Linq;
-using ICSharpCode.SharpDevelop.Dom;
+using ICSharpCode.NRefactory.TypeSystem;
 
 namespace ICSharpCode.PackageManagement.EnvDTE
 {
 	public class CodeClass2 : CodeClass, global::EnvDTE.CodeClass2
 	{
-		public CodeClass2(CodeModelContext context, ITypeDefinitionModel typeModel)
-			: base(context, typeModel)
+		public CodeClass2(CodeModelContext context, ITypeDefinition typeDefinition)
+			: base(context, typeDefinition)
 		{
 		}
 		
 		public global::EnvDTE.CodeElements PartialClasses {
 			get {
-				var list = new CodeElementsList<CodeType>();
-				var td = typeModel.Resolve();
-				if (td != null) {
-					foreach (var fileName in td.Parts.Select(p => p.UnresolvedFile.FileName).Distinct()) {
-						var newContext = context.WithFilteredFileName(fileName);
-						list.Add(CodeType.Create(newContext, typeModel));
-					}
-				} else {
-					list.Add(this);
-				}
-				return list;
+				var partialClasses = new CodeElementsList<CodeType>();
+				partialClasses.Add(this);
+				return partialClasses;
 			}
 		}
 		
 		public bool IsGeneric {
-			get { return typeModel.FullTypeName.TypeParameterCount > 0; }
+			get { return typeDefinition.FullTypeName.TypeParameterCount > 0; }
 		}
 		
 		public global::EnvDTE.vsCMClassKind ClassKind {
 			get {
-				if (typeModel.IsPartial) {
+				if (typeDefinition.Parts.First().IsPartial) {
 					return global::EnvDTE.vsCMClassKind.vsCMClassKindPartialClass;
 				}
 				return global::EnvDTE.vsCMClassKind.vsCMClassKindMainClass;
 			}
 			set {
-				if (value == this.ClassKind)
+				if (value == ClassKind) {
 					return;
+				}
+				
 				if (value == global::EnvDTE.vsCMClassKind.vsCMClassKindPartialClass) {
-					var td = typeModel.Resolve();
-					if (td == null)
-						throw new NotSupportedException();
-					context.CodeGenerator.MakePartial(td);
+					context.CodeGenerator.MakePartial(typeDefinition);
 				} else {
-					throw new NotSupportedException();
+					throw new NotImplementedException();
 				}
 			}
 		}
 		
 		public bool IsAbstract {
-			get { return typeModel.IsAbstract; }
+			get { return typeDefinition.IsAbstract; }
 		}
 	}
 }

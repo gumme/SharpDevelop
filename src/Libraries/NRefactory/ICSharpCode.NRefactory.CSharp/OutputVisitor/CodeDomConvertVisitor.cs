@@ -27,7 +27,6 @@ using ICSharpCode.NRefactory.CSharp.TypeSystem;
 using ICSharpCode.NRefactory.PatternMatching;
 using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
-using Mono.CSharp;
 
 namespace ICSharpCode.NRefactory.CSharp
 {
@@ -213,6 +212,11 @@ namespace ICSharpCode.NRefactory.CSharp
 		CodeSnippetStatement MakeSnippetStatement(Statement stmt)
 		{
 			return new CodeSnippetStatement(MakeSnippet(stmt));
+		}
+
+		CodeObject IAstVisitor<CodeObject>.VisitNullNode(AstNode nullNode)
+		{
+			return null;
 		}
 		
 		CodeObject IAstVisitor<CodeObject>.VisitAnonymousMethodExpression(AnonymousMethodExpression anonymousMethodExpression)

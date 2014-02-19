@@ -827,6 +827,7 @@ namespace ICSharpCode.NRefactory.CSharp.TypeSystem
 			td.IsAbstract = (modifiers & (Modifiers.Abstract | Modifiers.Static)) != 0;
 			td.IsSealed = (modifiers & (Modifiers.Sealed | Modifiers.Static)) != 0;
 			td.IsShadowing = (modifiers & Modifiers.New) != 0;
+			td.IsPartial = (modifiers & Modifiers.Partial) != 0;
 		}
 		
 		static void ApplyModifiers(AbstractUnresolvedMember m, Modifiers modifiers)
@@ -1006,7 +1007,7 @@ namespace ICSharpCode.NRefactory.CSharp.TypeSystem
 			public override ConstantExpression VisitPrimitiveExpression(PrimitiveExpression primitiveExpression)
 			{
 				object val = interningProvider.InternValue(primitiveExpression.Value);
-				TypeCode typeCode = Type.GetTypeCode(val.GetType());
+				TypeCode typeCode = (val == null ? TypeCode.Object : Type.GetTypeCode(val.GetType()));
 				return interningProvider.Intern(
 					new PrimitiveConstantExpression(typeCode.ToTypeReference(), val));
 			}

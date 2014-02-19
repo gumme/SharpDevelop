@@ -1,13 +1,31 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
 
 using ICSharpCode.Core;
+using ICSharpCode.NRefactory.TypeSystem;
+using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using ICSharpCode.PackageManagement.EnvDTE;
 using ICSharpCode.SharpDevelop;
+using ICSharpCode.SharpDevelop.Dom;
 using NUnit.Framework;
 using PackageManagement.Tests.Helpers;
 using Rhino.Mocks;
@@ -16,20 +34,19 @@ using DTE = ICSharpCode.PackageManagement.EnvDTE;
 namespace PackageManagement.Tests.EnvDTE
 {
 	[TestFixture]
-	public class ProjectItemTests
+	public class ProjectItemTests : CodeModelTestBase
 	{
-		TestableDTEProject project;
+		TestableDTEProject testableDteProject;
 		ProjectItems projectItems;
-		TestableProject msbuildProject;
 		FakeFileService fakeFileService;
 		
 		void CreateProjectItems(string fileName = @"d:\projects\MyProject\MyProject.csproj")
 		{
-			project = new TestableDTEProject();
-			msbuildProject = project.TestableProject;
+			testableDteProject = new TestableDTEProject();
+			msbuildProject = testableDteProject.TestableProject;
 			msbuildProject.FileName = new FileName(fileName);
-			projectItems = (ProjectItems)project.ProjectItems;
-			fakeFileService = project.FakeFileService;
+			projectItems = (ProjectItems)testableDteProject.ProjectItems;
+			fakeFileService = testableDteProject.FakeFileService;
 		}
 		
 		void OpenSavedFileInSharpDevelop(string fileName)
@@ -48,6 +65,11 @@ namespace PackageManagement.Tests.EnvDTE
 			view.Stub(v => v.IsDirty).Return(dirty);
 			fakeFileService.AddOpenView(view, fileName);
 			return view;
+		}
+		
+		void AddCompilationUnit()
+		{
+			fakeFileService.CompilationUnitToReturnFromGetCompilationUnit = projectContent.CreateCompilation();
 		}
 		
 		[Test]
@@ -156,7 +178,7 @@ namespace PackageManagement.Tests.EnvDTE
 			
 			fileItem.Delete();
 			
-			Assert.AreEqual(@"d:\projects\myproject\src\program.cs", project.FakeFileService.PathPassedToRemoveFile);
+			Assert.AreEqual(@"d:\projects\myproject\src\program.cs", testableDteProject.FakeFileService.PathPassedToRemoveFile);
 		}
 		
 		[Test]
@@ -173,7 +195,6 @@ namespace PackageManagement.Tests.EnvDTE
 		}
 		
 		[Test]
-		[Ignore("TODO")]
 		public void FileCodeModel_ProjectDirectory_ReturnsNull()
 		{
 			CreateProjectItems();
@@ -187,10 +208,10 @@ namespace PackageManagement.Tests.EnvDTE
 		}
 		
 		[Test]
-		[Ignore("TODO")]
 		public void FileCodeModel_ProjectFile_ReturnsFileCodeModel()
 		{
 			CreateProjectItems();
+			AddCompilationUnit();
 			msbuildProject.AddFile(@"src\program.cs");
 		
 			global::EnvDTE.ProjectItem directoryItem = projectItems.Item("src");
@@ -202,18 +223,18 @@ namespace PackageManagement.Tests.EnvDTE
 		}
 		
 		[Test]
-		[Ignore("TODO")]
 		public void FileCodeModel_GetCodeElementsFromFileCodeModelForProjectFile_FileServicePassedToFileCodeModel()
 		{
 			CreateProjectItems(@"d:\projects\MyProject\MyProject.csproj");
+			AddCompilationUnit();
 			msbuildProject.AddFile(@"src\program.cs");
-			
 			global::EnvDTE.ProjectItem directoryItem = projectItems.Item("src");
 			global::EnvDTE.ProjectItem fileItem = directoryItem.ProjectItems.Item("program.cs");
 			
 			global::EnvDTE.CodeElements codeElements = fileItem.FileCodeModel.CodeElements;
 			
-			Assert.AreEqual(@"d:\projects\MyProject\src\program.cs", fakeFileService.FileNamePassedToGetCompilationUnit);
+			CodeNamespace codeNamespace = codeElements.FirstCodeNamespaceOrDefault();
+			Assert.AreEqual(testableDteProject.TestableProject, fakeFileService.ProjectPassedToGetCompilationUnit);
 			Assert.AreEqual(0, codeElements.Count);
 		}
 		
@@ -329,7 +350,7 @@ namespace PackageManagement.Tests.EnvDTE
 			msbuildProject.AddFile("MainForm.cs");
 			msbuildProject.AddDependentFile("MainForm.Designer.cs", "MainForm.cs");
 			
-			global::EnvDTE.ProjectItems projectItems = project.ProjectItems;
+			global::EnvDTE.ProjectItems projectItems = testableDteProject.ProjectItems;
 			
 			string[] expectedFiles = new string[] {
 				"MainForm.cs"
@@ -344,7 +365,7 @@ namespace PackageManagement.Tests.EnvDTE
 			msbuildProject.AddFile("MainForm.cs");
 			msbuildProject.AddDependentFile("MainForm.Designer.cs", "MainForm.cs");
 			
-			Assert.Throws<ArgumentException>(() => project.ProjectItems.Item("MainForm.Designer.cs"));
+			Assert.Throws<ArgumentException>(() => testableDteProject.ProjectItems.Item("MainForm.Designer.cs"));
 		}
 		
 		[Test]
@@ -353,7 +374,7 @@ namespace PackageManagement.Tests.EnvDTE
 			CreateProjectItems();
 			msbuildProject.AddFile("MainForm.cs");
 			msbuildProject.AddDependentFile("MainForm.Designer.cs", "MainForm.cs");
-			global::EnvDTE.ProjectItem mainFormItem = project.ProjectItems.Item("MainForm.cs");
+			global::EnvDTE.ProjectItem mainFormItem = testableDteProject.ProjectItems.Item("MainForm.cs");
 			
 			global::EnvDTE.ProjectItems mainFormProjectItems = mainFormItem.ProjectItems;
 			
@@ -386,7 +407,7 @@ namespace PackageManagement.Tests.EnvDTE
 			
 			global::EnvDTE.ProjectItems collection = projectItem.Collection;
 			
-			Assert.AreEqual(project.ProjectItems, collection);
+			Assert.AreEqual(testableDteProject.ProjectItems, collection);
 		}
 		
 		[Test]
@@ -395,7 +416,7 @@ namespace PackageManagement.Tests.EnvDTE
 			CreateProjectItems();
 			msbuildProject.FileName = new FileName(@"d:\projects\MyProject\MyProject.csproj");
 			msbuildProject.AddFile(@"src\program.cs");
-			global::EnvDTE.ProjectItem srcDirectoryItem = project.ProjectItems.Item("src");
+			global::EnvDTE.ProjectItem srcDirectoryItem = testableDteProject.ProjectItems.Item("src");
 			global::EnvDTE.ProjectItem fileProjectItem = srcDirectoryItem.ProjectItems.Item("program.cs");
 			
 			global::EnvDTE.ProjectItems collection = fileProjectItem.Collection;
@@ -429,6 +450,24 @@ namespace PackageManagement.Tests.EnvDTE
 			item.Save();
 			
 			Assert.IsFalse(fakeFileService.IsSaveFileCalled);
+		}
+		
+		[Test]
+		public void FileCodeModel_AddImportToProjectFile_UsesCodeGenerator()
+		{
+			CreateProjectItems(@"d:\projects\Test\Tests.csproj");
+			AddCompilationUnit();
+			msbuildProject.AddFile(@"src\program.cs");
+			msbuildProject.SetLanguageBinding(languageBinding);
+			global::EnvDTE.ProjectItem directoryItem = projectItems.Item("src");
+			global::EnvDTE.ProjectItem fileItem = directoryItem.ProjectItems.Item("program.cs");
+			
+			global::EnvDTE.FileCodeModel2 fileCodeModel = fileItem.FileCodeModel;
+			fileCodeModel.AddImport("System.Xml");
+			
+			codeGenerator.AssertWasCalled(generator => generator.AddImport(
+				new FileName(@"d:\projects\Test\src\program.cs"),
+				"System.Xml"));
 		}
 	}
 }

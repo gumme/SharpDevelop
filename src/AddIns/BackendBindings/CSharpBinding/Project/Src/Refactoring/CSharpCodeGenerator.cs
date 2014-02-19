@@ -1,5 +1,20 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.IO;
@@ -111,7 +126,7 @@ namespace CSharpBinding.Refactoring
 				var attr = new AttributeSection();
 				attr.AttributeTarget = target;
 				attr.Attributes.Add(builder.ConvertAttribute(attribute));
-				script.InsertBefore(node, attr);
+				script.AddAttribute(node, attr);
 			}
 		}
 		
@@ -129,6 +144,35 @@ namespace CSharpBinding.Refactoring
 			}
 		}
 		
+		public override void AddFieldAtStart(ITypeDefinition declaringType, Accessibility accessibility, IType fieldType, string name)
+		{
+			SDRefactoringContext context = declaringType.CreateRefactoringContext();
+			var typeDecl = context.GetNode<TypeDeclaration>();
+			using (var script = context.StartScript()) {
+				var astBuilder = context.CreateTypeSystemAstBuilder(typeDecl.FirstChild);
+				var fieldDecl = new FieldDeclaration();
+				fieldDecl.Modifiers = TypeSystemAstBuilder.ModifierFromAccessibility(accessibility);
+				fieldDecl.ReturnType = astBuilder.ConvertType(context.Compilation.Import(fieldType));
+				fieldDecl.Variables.Add(new VariableInitializer(name));
+				
+				script.AddTo(typeDecl, fieldDecl);
+			}
+		}
+		
+		public override void AddMethodAtStart(ITypeDefinition declaringType, Accessibility accessibility, IType returnType, string name)
+		{
+			SDRefactoringContext context = declaringType.CreateRefactoringContext();
+			var typeDecl = context.GetNode<TypeDeclaration>();
+			using (var script = context.StartScript()) {
+				var astBuilder = context.CreateTypeSystemAstBuilder(typeDecl.FirstChild);
+				var methodDecl = new MethodDeclaration();
+				methodDecl.Name = name;
+				methodDecl.ReturnType = astBuilder.ConvertType(context.Compilation.Import(returnType));
+				
+				script.AddTo(typeDecl, methodDecl);
+			}
+		}
+		
 		public override void ChangeAccessibility(IEntity entity, Accessibility newAccessiblity)
 		{
 			// TODO script.ChangeModifiers(...)
@@ -142,6 +186,26 @@ namespace CSharpBinding.Refactoring
 			using (var script = context.StartScript()) {
 				AstType ns = astBuilder.ConvertNamespace(namespaceName);
 				UsingHelper.InsertUsing(context, script, ns);
+			}
+		}
+		
+		public override void MakePartial(ITypeDefinition td)
+		{
+			SDRefactoringContext refactoringContext = td.CreateRefactoringContext();
+			var typeDeclaration = refactoringContext.GetNode<TypeDeclaration>();
+			
+			using (Script script = refactoringContext.StartScript()) {
+				script.ChangeModifier(typeDeclaration, typeDeclaration.Modifiers | Modifiers.Partial);
+			}
+		}
+		
+		public override void MakeVirtual(IMember member)
+		{
+			SDRefactoringContext refactoringContext = member.CreateRefactoringContext();
+			var entityDeclaration = refactoringContext.GetNode<EntityDeclaration>();
+			
+			using (Script script = refactoringContext.StartScript()) {
+				script.ChangeModifier(entityDeclaration, entityDeclaration.Modifiers | Modifiers.Virtual);
 			}
 		}
 	}

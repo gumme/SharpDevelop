@@ -1,12 +1,31 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
+using System.Threading;
+using System.Threading.Tasks;
 using CSharpBinding.Completion;
 using CSharpBinding.Parser;
 using CSharpBinding.Refactoring;
 using ICSharpCode.AvalonEdit.Document;
+using ICSharpCode.Core;
 using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.CSharp;
+using ICSharpCode.NRefactory.Editor;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using ICSharpCode.SharpDevelop;
@@ -296,6 +315,47 @@ class MySimpleAttribute : Attribute {}
 
 [MySimple]
 class TargetClass
+{
+	void TargetA()
+	{
+	}
+	
+	public int TargetB { get; set; }
+	
+	public int TargetC_ {
+		get {
+			return 0;
+		}
+	}
+}
+
+interface TargetInterface
+{
+}
+", textEditor.Document.Text);
+		}
+		
+		[Test]
+		public void MakeClassPartial()
+		{
+			SD.ParserService.Stub(p => p.ParseAsync(
+				Arg<FileName>.Is.Equal(textEditor.FileName),
+				Arg<ITextSource>.Is.Equal(textEditor.TextEditor.Document),
+				Arg<IProject>.Is.Null,
+				Arg<CancellationToken>.Is.Anything))
+				.Return(new Task<ParseInformation>(() => SD.ParserService.GetCachedParseInformation(textEditor.FileName)));
+			var compilation = SD.ParserService.GetCompilationForFile(textEditor.FileName);
+			var entity = FindEntity<ITypeDefinition>("TargetClass");
+			gen.MakePartial(entity);
+			
+			Assert.AreEqual(@"using System;
+using System.Reflection;
+
+[assembly: AssemblyTitle(""CSharpBinding.Tests"")]
+
+class MySimpleAttribute : Attribute {}
+
+partial class TargetClass
 {
 	void TargetA()
 	{

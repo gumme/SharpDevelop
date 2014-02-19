@@ -154,9 +154,9 @@ class Foo {
 	void Test ()
 	{
 		do do
-				$");
-			Assert.AreEqual("\t\t\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t\t\t", indent.NextLineIndent);
+			$");
+			Assert.AreEqual("\t\t\t", indent.ThisLineIndent);
+			Assert.AreEqual("\t\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -181,7 +181,7 @@ class Foo {
 	void Test ()
 	{
 		do do do
-					foo();
+			foo();
 $");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
 			Assert.AreEqual("\t\t", indent.NextLineIndent);
@@ -225,6 +225,19 @@ class Foo {
 		do do do foo() $");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
 			Assert.AreEqual("\t\t\t\t\t", indent.NextLineIndent);
+		}
+
+		[Test]
+		public void TestBrackets_NestedDoContinuation_ExpressionNotEnded2()
+		{
+			var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		do do do 
+			foo() $");
+			Assert.AreEqual("\t\t\t", indent.ThisLineIndent);
+			Assert.AreEqual("\t\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -993,6 +1006,164 @@ class Foo
 		else$
 ", policy);
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
+			Assert.AreEqual("\t\t\t", indent.NextLineIndent);
+		}
+
+
+		[Test]
+		public void TestNextLineShifted_OpeningBrace()
+		{
+			var policy = FormattingOptionsFactory.CreateMono();
+			policy.ClassBraceStyle = BraceStyle.NextLineShifted;
+			var indent = Helper.CreateEngine(@"
+class Foo 
+{$
+", policy);
+			Assert.AreEqual("\t", indent.ThisLineIndent);
+			Assert.AreEqual("\t", indent.NextLineIndent);
+		}
+
+		[Test]
+		public void TestNextLineShifted_ClosingBrace()
+		{
+			var policy = FormattingOptionsFactory.CreateMono();
+			policy.ClassBraceStyle = BraceStyle.NextLineShifted;
+			var indent = Helper.CreateEngine(@"
+class Foo 
+	{
+	}$
+", policy);
+			Assert.AreEqual("\t", indent.ThisLineIndent);
+			Assert.AreEqual("", indent.NextLineIndent);
+		}
+
+		[Test]
+		public void TestNextLineShifted2()
+		{
+			var policy = FormattingOptionsFactory.CreateMono();
+			policy.ClassBraceStyle = BraceStyle.NextLineShifted2;
+			var indent = Helper.CreateEngine(@"
+class Foo 
+{$
+", policy);
+			Assert.AreEqual("\t", indent.ThisLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
+		}
+
+		[Test]
+		public void TestBanner_ClosingBrace()
+		{
+			var policy = FormattingOptionsFactory.CreateMono();
+			policy.ClassBraceStyle = BraceStyle.BannerStyle;
+			var indent = Helper.CreateEngine(@"
+class Foo {
+	}$
+", policy);
+			Assert.AreEqual("\t", indent.ThisLineIndent);
+			Assert.AreEqual("", indent.NextLineIndent);
+		}
+
+		[Test]
+		public void TestNextLineShifted_IfStatement()
+		{
+			var policy = FormattingOptionsFactory.CreateMono();
+			policy.StatementBraceStyle = BraceStyle.NextLineShifted;
+			var indent = Helper.CreateEngine(@"
+class Foo 
+{
+	public static void Main (string[] args)
+	{
+		if (true)
+		{$
+	}
+", policy);
+			Assert.AreEqual("\t\t\t", indent.ThisLineIndent);
+			Assert.AreEqual("\t\t\t", indent.NextLineIndent);
+		}
+
+		[Test]
+		public void TestPreprocessorIndenting_Case1()
+		{
+			var policy = FormattingOptionsFactory.CreateMono();
+			policy.StatementBraceStyle = BraceStyle.NextLineShifted;
+			var indent = Helper.CreateEngine(@"
+using System;
+
+class X
+{
+	static void Foo (int arg)
+	{
+		#if !DEBUG
+		if (arg > 0) {
+		#else$
+		if (arg < 0) {
+		#endif
+			
+		}
+	}
+
+	public static void Main ()
+	{
+	}
+}", policy);
+			Assert.AreEqual("\t\t", indent.ThisLineIndent);
+		}
+
+		[Test]
+		public void TestPreprocessorIndenting_Case2()
+		{
+			var policy = FormattingOptionsFactory.CreateMono();
+			policy.StatementBraceStyle = BraceStyle.NextLineShifted;
+			var indent = Helper.CreateEngine(@"
+using System;
+
+class X
+{
+	static void Foo (int arg)
+	{
+		#if !DEBUG
+		if (arg > 0) {
+		#else
+		if (arg < 0) {$
+		#endif
+			
+		}
+	}
+
+	public static void Main ()
+	{
+	}
+}", policy);
+			Assert.AreEqual("\t\t", indent.ThisLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
+		}
+
+		[Test]
+		public void TestPreprocessorIndenting_Case3()
+		{
+			var policy = FormattingOptionsFactory.CreateMono();
+			policy.StatementBraceStyle = BraceStyle.NextLineShifted;
+			var indent = Helper.CreateEngine(@"
+using System;
+
+class X
+{
+	static void Foo (int arg)
+	{
+		#if !DEBUG
+		if (arg > 0) {
+		#else
+		if (arg < 0) {
+		#endif
+			$
+		}
+	}
+
+	public static void Main ()
+	{
+	}
+}", policy);
+			Assert.AreEqual("\t\t\t", indent.ThisLineIndent);
 			Assert.AreEqual("\t\t\t", indent.NextLineIndent);
 		}
 	}

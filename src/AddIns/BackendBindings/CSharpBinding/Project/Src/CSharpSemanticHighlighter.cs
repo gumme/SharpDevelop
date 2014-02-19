@@ -1,5 +1,20 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
@@ -9,7 +24,6 @@ using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.Core;
 using ICSharpCode.NRefactory;
-using ICSharpCode.NRefactory.CSharp.Analysis;
 using ICSharpCode.NRefactory.Editor;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.SharpDevelop;
@@ -21,12 +35,15 @@ namespace CSharpBinding
 	/// <summary>
 	/// Semantic highlighting for C#.
 	/// </summary>
-	public class CSharpSemanticHighlighter : SemanticHighlightingVisitor<HighlightingColor>, IHighlighter
+	public class CSharpSemanticHighlighter : IHighlighter
 	{
 		readonly IDocument document;
+		internal CSharpSemanticHighlighterVisitor visitor;
 		
 		List<IDocumentLine> invalidLines;
 		List<CachedLine> cachedLines;
+		internal CSharpFullParseInformation parseInfo;
+		
 		bool hasCrashed;
 		bool forceParseOnNextRefresh;
 		bool eventHandlersAreRegistered;
@@ -34,36 +51,14 @@ namespace CSharpBinding
 		
 		int lineNumber;
 		HighlightedLine line;
-		CSharpFullParseInformation parseInfo;
 		
-		#region Constructor + Dispose
 		public CSharpSemanticHighlighter(IDocument document)
 		{
 			if (document == null)
 				throw new ArgumentNullException("document");
 			this.document = document;
 			
-			var highlighting = HighlightingManager.Instance.GetDefinition("C#");
-			//this.defaultTextColor = ???;
-			this.referenceTypeColor = highlighting.GetNamedColor("ReferenceTypes");
-			this.valueTypeColor = highlighting.GetNamedColor("ValueTypes");
-			this.interfaceTypeColor = this.referenceTypeColor;
-			this.enumerationTypeColor = this.valueKeywordColor;
-			this.typeParameterTypeColor = this.referenceTypeColor;
-			this.delegateTypeColor = this.referenceTypeColor;
-			
-			this.methodDeclarationColor = this.methodCallColor = highlighting.GetNamedColor("MethodCall");
-			//this.eventDeclarationColor = this.eventAccessColor = defaultTextColor;
-			//this.propertyDeclarationColor = this.propertyAccessColor = defaultTextColor;
-			this.fieldDeclarationColor = this.fieldAccessColor = highlighting.GetNamedColor("FieldAccess");
-			//this.variableDeclarationColor = this.variableAccessColor = defaultTextColor;
-			//this.parameterDeclarationColor = this.parameterAccessColor = defaultTextColor;
-			this.valueKeywordColor = highlighting.GetNamedColor("NullOrValueKeywords");
-			//this.externAliasKeywordColor = ...;
-			
-			this.parameterModifierColor = highlighting.GetNamedColor("ParameterModifiers");
-			this.inactiveCodeColor = highlighting.GetNamedColor("InactiveCode");
-			this.syntaxErrorColor = highlighting.GetNamedColor("SemanticError");
+			this.visitor = new CSharpSemanticHighlighterVisitor(this, document);
 			
 			if (document is TextDocument && SD.MainThread.CheckAccess()) {
 				// Use the cache only for the live AvalonEdit document
@@ -87,99 +82,10 @@ namespace CSharpBinding
 				SD.ParserService.LoadSolutionProjectsThread.Finished -= ParserService_LoadSolutionProjectsThreadEnded;
 				eventHandlersAreRegistered = false;
 			}
-			this.resolver = null;
+			this.visitor.Dispose();
 			this.parseInfo = null;
 		}
-		#endregion
 		
-		#region Caching
-		// If a line gets edited and we need to display it while no parse information is ready for the
-		// changed file, the line would flicker (semantic highlightings disappear temporarily).
-		// We avoid this issue by storing the semantic highlightings and updating them on document changes
-		// (using anchor movement)
-		class CachedLine
-		{
-			public readonly HighlightedLine HighlightedLine;
-			public ITextSourceVersion OldVersion;
-			
-			/// <summary>
-			/// Gets whether the cache line is valid (no document changes since it was created).
-			/// This field gets set to false when Update() is called.
-			/// </summary>
-			public bool IsValid;
-			
-			public IDocumentLine DocumentLine { get { return HighlightedLine.DocumentLine; } }
-			
-			public CachedLine(HighlightedLine highlightedLine, ITextSourceVersion fileVersion)
-			{
-				if (highlightedLine == null)
-					throw new ArgumentNullException("highlightedLine");
-				if (fileVersion == null)
-					throw new ArgumentNullException("fileVersion");
-				
-				this.HighlightedLine = highlightedLine;
-				this.OldVersion = fileVersion;
-				this.IsValid = true;
-			}
-			
-			public void Update(ITextSourceVersion newVersion)
-			{
-				// Apply document changes to all highlighting sections:
-				foreach (TextChangeEventArgs change in OldVersion.GetChangesTo(newVersion)) {
-					foreach (HighlightedSection section in HighlightedLine.Sections) {
-						int endOffset = section.Offset + section.Length;
-						section.Offset = change.GetNewOffset(section.Offset);
-						endOffset = change.GetNewOffset(endOffset);
-						section.Length = endOffset - section.Offset;
-					}
-				}
-				// The resulting sections might have become invalid:
-				// - zero-length if section was deleted,
-				// - a section might have moved outside the range of this document line (newline inserted in document = line split up)
-				// So we will remove all highlighting sections which have become invalid.
-				int lineStart = HighlightedLine.DocumentLine.Offset;
-				int lineEnd = lineStart + HighlightedLine.DocumentLine.Length;
-				for (int i = 0; i < HighlightedLine.Sections.Count; i++) {
-					HighlightedSection section = HighlightedLine.Sections[i];
-					if (section.Offset < lineStart || section.Offset + section.Length > lineEnd || section.Length <= 0)
-						HighlightedLine.Sections.RemoveAt(i--);
-				}
-				
-				this.OldVersion = newVersion;
-				this.IsValid = false;
-			}
-		}
-		#endregion
-		
-		#region Event Handlers
-		void syntaxHighlighter_VisibleDocumentLinesChanged(object sender, EventArgs e)
-		{
-
-		}
-		
-		void ParserService_LoadSolutionProjectsThreadEnded(object sender, EventArgs e)
-		{
-			cachedLines.Clear();
-			invalidLines.Clear();
-			forceParseOnNextRefresh = true;
-			OnHighlightingStateChanged(1, document.LineCount);
-		}
-		
-		void ParserService_ParseInformationUpdated(object sender, ParseInformationEventArgs e)
-		{
-			if (FileUtility.IsEqualFileName(e.FileName, document.FileName) && invalidLines.Count > 0) {
-				cachedLines.Clear();
-				foreach (IDocumentLine line in invalidLines) {
-					if (!line.IsDeleted) {
-						OnHighlightingStateChanged(line.LineNumber, line.LineNumber);
-					}
-				}
-				invalidLines.Clear();
-			}
-		}
-		#endregion
-		
-		#region IHighlighter implementation
 		public event HighlightingStateChangedEventHandler HighlightingStateChanged;
 		
 		protected virtual void OnHighlightingStateChanged(int fromLineNumber, int toLineNumber)
@@ -275,20 +181,26 @@ namespace CSharpBinding
 				}
 			}
 			
-			if (resolver == null) {
+			if (visitor.Resolver == null) {
 				var compilation = SD.ParserService.GetCompilationForFile(parseInfo.FileName);
-				resolver = parseInfo.GetResolver(compilation);
+				visitor.Resolver = parseInfo.GetResolver(compilation);
 			}
 			
 			line = new HighlightedLine(document, documentLine);
 			this.lineNumber = lineNumber;
-			this.regionStart = new TextLocation(lineNumber, 1);
-			this.regionEnd = new TextLocation(lineNumber, 1 + document.GetLineByNumber(lineNumber).Length);
+			visitor.UpdateLineInformation(lineNumber);
+
 			if (Debugger.IsAttached) {
-				parseInfo.SyntaxTree.AcceptVisitor(this);
+				parseInfo.SyntaxTree.AcceptVisitor(visitor);
+				#if DEBUG
+				line.ValidateInvariants();
+				#endif
 			} else {
 				try {
-					parseInfo.SyntaxTree.AcceptVisitor(this);
+					parseInfo.SyntaxTree.AcceptVisitor(visitor);
+					#if DEBUG
+					line.ValidateInvariants();
+					#endif
 				} catch (Exception ex) {
 					hasCrashed = true;
 					throw new ApplicationException("Error highlighting line " + lineNumber, ex);
@@ -301,50 +213,7 @@ namespace CSharpBinding
 			return line;
 		}
 		
-		#if DEBUG
-		public override void VisitSyntaxTree(ICSharpCode.NRefactory.CSharp.SyntaxTree syntaxTree)
-		{
-			base.VisitSyntaxTree(syntaxTree);
-			line.ValidateInvariants();
-		}
-		#endif
-		
-		HighlightingColor IHighlighter.DefaultTextColor {
-			get {
-				return null;
-			}
-		}
-		
-		public void BeginHighlighting()
-		{
-			if (inHighlightingGroup)
-				throw new InvalidOperationException();
-			inHighlightingGroup = true;
-			if (invalidLines == null) {
-				// if invalidation isn't available, we're forced to parse the file now
-				forceParseOnNextRefresh = true;
-			}
-		}
-		
-		public void EndHighlighting()
-		{
-			inHighlightingGroup = false;
-			this.resolver = null;
-			this.parseInfo = null;
-			
-			// TODO use this to remove cached lines which are no longer visible
-//			var visibleDocumentLines = new HashSet<IDocumentLine>(syntaxHighlighter.GetVisibleDocumentLines());
-//			cachedLines.RemoveAll(c => !visibleDocumentLines.Contains(c.DocumentLine));
-		}
-		
-		public HighlightingColor GetNamedColor(string name)
-		{
-			return null;
-		}
-		#endregion
-		
-		#region Colorize
-		protected override void Colorize(TextLocation start, TextLocation end, HighlightingColor color)
+		internal void Colorize(TextLocation start, TextLocation end, HighlightingColor color)
 		{
 			if (color == null)
 				return;
@@ -372,6 +241,130 @@ namespace CSharpBinding
 				                  	Length = endOffset - startOffset,
 				                  	Color = color
 				                  });
+			}
+		}
+		
+		HighlightingColor IHighlighter.DefaultTextColor {
+			get {
+				return null;
+			}
+		}
+		
+		public void BeginHighlighting()
+		{
+			if (inHighlightingGroup)
+				throw new InvalidOperationException();
+			inHighlightingGroup = true;
+			if (invalidLines == null) {
+				// if invalidation isn't available, we're forced to parse the file now
+				forceParseOnNextRefresh = true;
+			}
+		}
+		
+		public void EndHighlighting()
+		{
+			inHighlightingGroup = false;
+			visitor.Resolver = null;
+			this.parseInfo = null;
+			
+			// TODO use this to remove cached lines which are no longer visible
+//			var visibleDocumentLines = new HashSet<IDocumentLine>(syntaxHighlighter.GetVisibleDocumentLines());
+//			cachedLines.RemoveAll(c => !visibleDocumentLines.Contains(c.DocumentLine));
+		}
+		
+		public HighlightingColor GetNamedColor(string name)
+		{
+			return null;
+		}
+		
+		#region Caching
+		// If a line gets edited and we need to display it while no parse information is ready for the
+		// changed file, the line would flicker (semantic highlightings disappear temporarily).
+		// We avoid this issue by storing the semantic highlightings and updating them on document changes
+		// (using anchor movement)
+		class CachedLine
+		{
+			public readonly HighlightedLine HighlightedLine;
+			public ITextSourceVersion OldVersion;
+			
+			/// <summary>
+			/// Gets whether the cache line is valid (no document changes since it was created).
+			/// This field gets set to false when Update() is called.
+			/// </summary>
+			public bool IsValid;
+			
+			public IDocumentLine DocumentLine { get { return HighlightedLine.DocumentLine; } }
+			
+			public CachedLine(HighlightedLine highlightedLine, ITextSourceVersion fileVersion)
+			{
+				if (highlightedLine == null)
+					throw new ArgumentNullException("highlightedLine");
+				if (fileVersion == null)
+					throw new ArgumentNullException("fileVersion");
+				
+				this.HighlightedLine = highlightedLine;
+				this.OldVersion = fileVersion;
+				this.IsValid = true;
+			}
+			
+			public void Update(ITextSourceVersion newVersion)
+			{
+				// Apply document changes to all highlighting sections:
+				foreach (TextChangeEventArgs change in OldVersion.GetChangesTo(newVersion)) {
+					foreach (HighlightedSection section in HighlightedLine.Sections) {
+						int endOffset = section.Offset + section.Length;
+						section.Offset = change.GetNewOffset(section.Offset);
+						endOffset = change.GetNewOffset(endOffset);
+						section.Length = endOffset - section.Offset;
+					}
+				}
+				// The resulting sections might have become invalid:
+				// - zero-length if section was deleted,
+				// - a section might have moved outside the range of this document line (newline inserted in document = line split up)
+				// So we will remove all highlighting sections which have become invalid.
+				int lineStart = HighlightedLine.DocumentLine.Offset;
+				int lineEnd = lineStart + HighlightedLine.DocumentLine.Length;
+				for (int i = 0; i < HighlightedLine.Sections.Count; i++) {
+					HighlightedSection section = HighlightedLine.Sections[i];
+					if (section.Offset < lineStart || section.Offset + section.Length > lineEnd || section.Length <= 0)
+						HighlightedLine.Sections.RemoveAt(i--);
+				}
+				
+				this.OldVersion = newVersion;
+				this.IsValid = false;
+			}
+		}
+		
+		void InvalidateAll()
+		{
+			cachedLines.Clear();
+			invalidLines.Clear();
+			forceParseOnNextRefresh = true;
+			OnHighlightingStateChanged(1, document.LineCount);
+		}
+		#endregion
+		
+		#region Event Handlers
+		void syntaxHighlighter_VisibleDocumentLinesChanged(object sender, EventArgs e)
+		{
+
+		}
+		
+		void ParserService_LoadSolutionProjectsThreadEnded(object sender, EventArgs e)
+		{
+			InvalidateAll();
+		}
+		
+		void ParserService_ParseInformationUpdated(object sender, ParseInformationEventArgs e)
+		{
+			if (FileUtility.IsEqualFileName(e.FileName, document.FileName) && invalidLines.Count > 0) {
+				cachedLines.Clear();
+				foreach (IDocumentLine line in invalidLines) {
+					if (!line.IsDeleted) {
+						OnHighlightingStateChanged(line.LineNumber, line.LineNumber);
+					}
+				}
+				invalidLines.Clear();
 			}
 		}
 		#endregion
