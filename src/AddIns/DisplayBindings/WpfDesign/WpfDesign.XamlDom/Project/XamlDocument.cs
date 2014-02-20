@@ -158,9 +158,14 @@ namespace ICSharpCode.WpfDesign.XamlDom
 		/// <summary>
 		/// Create an XamlObject from the instance.
 		/// </summary>
-		public XamlObject CreateObject(object instance)
+		public XamlObject CreateObject(object instance, object baseobject=null)
 		{
-			return (XamlObject)CreatePropertyValue(instance, null);
+			object obj = instance;
+			if (baseobject != null && instance.GetType() != baseobject.GetType())
+				obj = baseobject;
+			XamlObject xamlobj = (XamlObject)CreatePropertyValue(obj, null);
+			xamlobj.Instance = instance;
+			return xamlobj;
 		}
 		
 		/// <summary>

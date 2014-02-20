@@ -152,7 +152,7 @@ namespace ICSharpCode.WpfDesign.Designer.Services
 		protected virtual DesignItem CreateItem(DesignContext context)
 		{
 			object newInstance = context.Services.ExtensionManager.CreateInstanceWithCustomInstanceFactory(componentType, null);
-			DesignItem item = context.Services.Component.RegisterComponentForDesigner(newInstance);
+			DesignItem item = context.Services.Component.RegisterComponentForDesigner(newInstance, componentType);
 			changeGroup = item.OpenGroup("Drop Control");
 			context.Services.ExtensionManager.ApplyDefaultInitializers(item);
 			return item;
