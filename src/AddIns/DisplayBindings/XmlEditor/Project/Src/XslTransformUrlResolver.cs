@@ -17,37 +17,26 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using ICSharpCode.SharpDevelop.Gui;
+using System.IO;
+using System.Xml;
 
-namespace ICSharpCode.PackageManagement
+namespace ICSharpCode.XmlEditor
 {
-	public partial class RegisteredProjectTemplatePackageSourcesView : OptionPanel
+	public class XslTransformUrlResolver : XmlUrlResolver
 	{
-		RegisteredPackageSourcesViewModel viewModel;
+		readonly Uri baseDirectory;
 		
-		public RegisteredProjectTemplatePackageSourcesView()
+		public XslTransformUrlResolver(string fileName)
 		{
-			InitializeComponent();
+			this.baseDirectory = new Uri(Path.GetDirectoryName(fileName) + Path.DirectorySeparatorChar, UriKind.Absolute);
 		}
-				
-		RegisteredPackageSourcesViewModel ViewModel { 
-			get {
-				if (viewModel == null) {
-					viewModel = MainGrid.DataContext as RegisteredPackageSourcesViewModel;
-				}
-				return viewModel;
+		
+		public override Uri ResolveUri(Uri baseUri, string relativeUri)
+		{
+			if (baseUri != null) {
+				return base.ResolveUri(baseUri, relativeUri);
 			}
-		}
-		
-		public override void LoadOptions()
-		{
-			ViewModel.Load();
-		}
-		
-		public override bool SaveOptions()
-		{
-			ViewModel.Save();
-			return true;
+			return base.ResolveUri(baseDirectory, relativeUri);
 		}
 	}
 }

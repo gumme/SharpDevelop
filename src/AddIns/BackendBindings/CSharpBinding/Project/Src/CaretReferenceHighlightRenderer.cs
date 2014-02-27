@@ -79,6 +79,8 @@ namespace CSharpBinding
 		public void Draw(TextView textView, DrawingContext drawingContext)
 		{
 			if (currentReferences == null) {
+				if (textView.VisualLines.Count == 0)
+					return;
 				var start = textView.VisualLines.First().FirstDocumentLine.LineNumber;
 				var end = textView.VisualLines.Last().LastDocumentLine.LineNumber;
 				currentReferences = new List<ISegment>();
@@ -188,7 +190,7 @@ namespace CSharpBinding
 		{
 			var identifierNode = FindReferences.GetNodeToReplace(node);
 			TextLocation start, end;
-			if (!identifierNode.IsNull) {
+			if (identifierNode != null && !identifierNode.IsNull) {
 				start = identifierNode.StartLocation;
 				end = identifierNode.EndLocation;
 			}
