@@ -17,28 +17,50 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Drawing;
+using System.Windows.Media;
 
-namespace ICSharpCode.PackageManagement
+namespace ICSharpCode.SharpDevelop.Templates
 {
-	public class InstalledPackageViewModelFactory : PackageViewModelFactory
+	public static class TemplateIconLoader
 	{
-		SelectedProjectsForInstalledPackages selectedProjectsForInstalledPackages;
-		
-		public InstalledPackageViewModelFactory(IPackageViewModelFactory packageViewModelFactory)
-			: base(packageViewModelFactory)
+		public static IImage GetImage(string iconName)
 		{
-			selectedProjectsForInstalledPackages = new SelectedProjectsForInstalledPackages(Solution);
+			IImage image = GetFileImage(iconName);
+			if (image != null) {
+				return image;
+			}
+			return SD.ResourceService.GetImage(iconName);
 		}
 		
-		public override PackageViewModel CreatePackageViewModel(IPackageViewModelParent parent, IPackageFromRepository package)
+		static IImage GetFileImage(string iconName)
 		{
-			return new InstalledPackageViewModel(
-				parent,
-				package,
-				selectedProjectsForInstalledPackages,
-				PackageManagementEvents,
-				PackageActionRunner,
-				Logger);
+			if (FileIconService.IsFileImage(iconName)) {
+				return new FileImage(iconName);
+			}
+			return null;
+		}
+	}
+	
+	public class FileImage : IImage
+	{
+		string name;
+		
+		public FileImage(string name)
+		{
+			this.name = name;
+		}
+		
+		public ImageSource ImageSource {
+			get { return null; }
+		}
+		
+		public Bitmap Bitmap {
+			get { return FileIconService.GetBitmap(name); }
+		}
+		
+		public Icon Icon {
+			get { return null; }
 		}
 	}
 }
