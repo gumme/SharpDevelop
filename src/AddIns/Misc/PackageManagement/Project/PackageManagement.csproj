@@ -151,6 +151,7 @@
     <Compile Include="Src\FileConflictViewModel.cs" />
     <Compile Include="Src\ICodeGenerator.cs" />
     <Compile Include="Src\IDocumentView.cs" />
+    <Compile Include="Src\InstalledPackagesViewModel.cs" />
     <Compile Include="Src\IPackageRepositoryFactoryEvents.cs" />
     <Compile Include="Src\IPackageViewModelParent.cs" />
     <Compile Include="Src\IUpdatePackagesAction.cs" />
@@ -162,8 +163,6 @@
     <Compile Include="Src\IProjectBrowserUpdater.cs" />
     <Compile Include="Src\IFieldExtensions.cs" />
     <Compile Include="Src\IDocumentLoader.cs" />
-    <Compile Include="Src\InstalledPackageViewModel.cs" />
-    <Compile Include="Src\InstalledPackageViewModelFactory.cs" />
     <Compile Include="Src\IPackageManagementSelectedProject.cs" />
     <Compile Include="Src\ISelectProjectsService.cs" />
     <Compile Include="Src\ISolutionPackageRepository.cs" />
@@ -287,7 +286,6 @@
     <Compile Include="Src\ProcessPackageOperationsAction.cs" />
     <Compile Include="Src\ProjectBrowserRefresher.cs" />
     <Compile Include="Src\ProjectBrowserUpdater.cs" />
-    <Compile Include="Src\ProjectTemplatePackageRepositoryCache.cs" />
     <Compile Include="Src\ProjectTemplatePackagesSettingsFileName.cs" />
     <Compile Include="Src\RegisteredPackageRepositories.cs" />
     <Compile Include="Src\ManagePackagesView.cs">
@@ -342,7 +340,6 @@
     <Compile Include="Src\PackageRepositoryCache.cs" />
     <Compile Include="Src\PackagesForSelectedPageResult.cs" />
     <Compile Include="Src\ILicenseAcceptanceService.cs" />
-    <Compile Include="Src\InstalledPackagesViewModel.cs" />
     <Compile Include="Src\IPackageManagementFileService.cs" />
     <Compile Include="Src\IPackageManagementProjectService.cs" />
     <Compile Include="Src\IPackageManagementSolution.cs" />
@@ -380,11 +377,6 @@
     <Compile Include="Src\PackageManagementSolution.cs" />
     <Compile Include="Src\PackageManagementTask.cs" />
     <Compile Include="Src\PackageManagementTaskFactory.cs" />
-    <Compile Include="Src\RegisteredProjectTemplatePackageSources.cs" />
-    <Compile Include="Src\RegisteredProjectTemplatePackageSourcesView.xaml.cs">
-      <DependentUpon>RegisteredProjectTemplatePackageSourcesView.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Src\Scripting\ConsoleInitializer.cs" />
     <Compile Include="Src\Scripting\IPackageManagementConsoleHost.cs" />
     <Compile Include="Src\Scripting\IPackageScriptRunner.cs" />
@@ -517,7 +509,6 @@
     <Page Include="Src\RegisteredPackageSourcesView.xaml" />
     <Page Include="Src\PackagesView.xaml" />
     <Page Include="Src\PagedResultsView.xaml" />
-    <Page Include="Src\RegisteredProjectTemplatePackageSourcesView.xaml" />
     <Page Include="Src\Scripting\PackageManagementConsoleView.xaml" />
     <Page Include="Src\SelectProjectsView.xaml" />
   </ItemGroup>
