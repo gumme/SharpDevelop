@@ -46,7 +46,7 @@ namespace ICSharpCode.WpfDesign.Designer.PropertyGrid
 		{
 		}
 		
-		public PropertyGridView(IPropertyGrid pg)
+		public PropertyGridView(PropertyGrid pg)
 		{
 			PropertyGrid = pg??new PropertyGrid();
 			DataContext = PropertyGrid;
@@ -64,7 +64,7 @@ namespace ICSharpCode.WpfDesign.Designer.PropertyGrid
 
 		static PropertyContextMenu propertyContextMenu = new PropertyContextMenu();
 
-		public IPropertyGrid PropertyGrid { get; private set; }
+		public PropertyGrid PropertyGrid { get; private set; }
 
 		public static readonly DependencyProperty FirstColumnWidthProperty =
 			DependencyProperty.Register("FirstColumnWidth", typeof(double), typeof(PropertyGridView),

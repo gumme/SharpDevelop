@@ -35,20 +35,7 @@ using System.Windows;
 
 namespace ICSharpCode.WpfDesign.Designer.PropertyGrid
 {
-	
-	public interface IPropertyGrid
-    {
-        IEnumerable<DesignItem> SelectedItems { get; set; }
-        Dictionary<MemberDescriptor, PropertyNode> NodeFromDescriptor { get; }
-        DesignItem SingleItem { get; }
-        string Name { get; set; }
-        string OldName { get; }
-        bool IsNameCorrect { get; set; }
-        bool ReloadActive { get; }
-        event EventHandler AggregatePropertiesUpdated;
-        event PropertyChangedEventHandler PropertyChanged;
-    }
-	public class PropertyGrid : INotifyPropertyChanged, IPropertyGrid
+	public class PropertyGrid : INotifyPropertyChanged
 	{
 		public PropertyGrid()
 		{
