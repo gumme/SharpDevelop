@@ -60,20 +60,20 @@ namespace ICSharpCode.WpfDesign.Designer
 		HitTestFilterBehavior FilterHitTestInvisibleElements(DependencyObject potentialHitTestTarget)
 		{
 			UIElement element = potentialHitTestTarget as UIElement;
-						
+			
 			if (element != null) {
 				if (!(element.IsHitTestVisible && element.Visibility == Visibility.Visible)) {
 					return HitTestFilterBehavior.ContinueSkipSelfAndChildren;
 				}
 				
 				var designItem = Context.Services.Component.GetDesignItem(element) as XamlDesignItem;
-			
+				
 				if (designItem != null && designItem.IsDesignTimeLocked) {
 					return HitTestFilterBehavior.ContinueSkipSelfAndChildren;
+				}
+				
 			}
 			
-			}
-						
 			return HitTestFilterBehavior.Continue;
 		}
 		
@@ -158,6 +158,9 @@ namespace ICSharpCode.WpfDesign.Designer
 		DesignContext _context;
 		readonly EatAllHitTestRequests _eatAllHitTestRequests;
 		readonly AdornerLayer _adornerLayer;
+		PlacementOperation _currentOperation;
+		bool _moving = false;
+		int _movingDistance;
 		
 		public DesignPanel()
 		{
@@ -323,6 +326,10 @@ namespace ICSharpCode.WpfDesign.Designer
 		{
 			if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down)
 			{
+				if (_currentOperation != null)
+					_currentOperation.Commit();
+				_currentOperation = null;
+				_moving = false;
 				e.Handled = true;
 			}
 		}
@@ -333,14 +340,19 @@ namespace ICSharpCode.WpfDesign.Designer
 			{
 				e.Handled = true;
 
-				var placementOp = PlacementOperation.Start(Context.Services.Selection.SelectedItems, PlacementType.Move);
-
-
-				var dx1 = (e.Key == Key.Left) ? Keyboard.IsKeyDown(Key.LeftShift) ? -10 : -1 : 0;
-				var dy1 = (e.Key == Key.Up) ? Keyboard.IsKeyDown(Key.LeftShift) ? -10 : -1 : 0;
-				var dx2 = (e.Key == Key.Right) ? Keyboard.IsKeyDown(Key.LeftShift) ? 10 : 1 : 0;
-				var dy2 = (e.Key == Key.Down) ? Keyboard.IsKeyDown(Key.LeftShift) ? 10 : 1 : 0;
-				foreach (PlacementInformation info in placementOp.PlacedItems)
+				if (!_moving)
+				{
+					_currentOperation = PlacementOperation.Start(Context.Services.Selection.SelectedItems, PlacementType.Move);
+					_moving = true;
+					_movingDistance = 0;
+				}
+				
+				var dx1 = (e.Key == Key.Left) ? Keyboard.IsKeyDown(Key.LeftShift) ? _movingDistance - 10 : _movingDistance - 1 : 0;
+				var dy1 = (e.Key == Key.Up) ? Keyboard.IsKeyDown(Key.LeftShift) ? _movingDistance - 10 : _movingDistance - 1 : 0;
+				var dx2 = (e.Key == Key.Right) ? Keyboard.IsKeyDown(Key.LeftShift) ? _movingDistance + 10 : _movingDistance + 1 : 0;
+				var dy2 = (e.Key == Key.Down) ? Keyboard.IsKeyDown(Key.LeftShift) ? _movingDistance + 10 : _movingDistance + 1 : 0;
+				
+				foreach (PlacementInformation info in _currentOperation.PlacedItems)
 				{
 					if (!Keyboard.IsKeyDown(Key.LeftCtrl))
 					{
@@ -356,9 +368,11 @@ namespace ICSharpCode.WpfDesign.Designer
 						                       info.OriginalBounds.Width + dx1 + dx2,
 						                       info.OriginalBounds.Height + dy1 + dy2);
 					}
-
-					placementOp.CurrentContainerBehavior.SetPosition(info);
+					
+					_currentOperation.CurrentContainerBehavior.SetPosition(info);
 				}
+
+				_movingDistance = (dx1 + dx2 + dy1 + dy2);
 			}
 		}
 		
