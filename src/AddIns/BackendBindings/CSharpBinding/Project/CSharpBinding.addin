@@ -119,6 +119,9 @@
 		             label = "${res:Dialog.ProjectOptions.Publish}"
 		             class = "ICSharpCode.SharpDevelop.Gui.OptionPanels.Publish"/>-->
 		<Include id = "AllManaged" path="/SharpDevelop/BackendBindings/ProjectOptions/AllManaged"/>
+		<OptionPanel id    = "CSharpProjectFormattingOptions"
+		             label = "${res:Dialog.ProjectOptions.CodeFormatting}"
+		             class = "CSharpBinding.OptionPanels.CSharpProjectFormattingOptionPanel"/>
 	</Path>
 	
 	<Path name = "/Workspace/Icons">
@@ -148,7 +151,16 @@
 			             label="Code inspection"
 			             class="CSharpBinding.Refactoring.IssueOptions"/>
 			<ContextActionOptionPanel id="ContextActions" path="/SharpDevelop/ViewContent/TextEditor/C#/ContextActions"/>
+			<OptionPanel id="Formatting"
+			             label="Formatting"
+			             class="CSharpBinding.OptionPanels.CSharpGlobalFormattingOptionPanel"/>
 		</OptionPanel>
+	</Path>
+	
+	<Path path = "/SharpDevelop/Dialogs/SolutionFormattingOptionsDialog">
+		<OptionPanel id="C#Formatting"
+		             label="C#"
+		             class="CSharpBinding.OptionPanels.CSharpSolutionFormattingOptionPanel"/>
 	</Path>
 	
 	<Path path = "/SharpDevelop/Workbench/MainMenu/Search">
@@ -253,7 +265,6 @@
 		<Class class = "ICSharpCode.NRefactory.CSharp.Refactoring.NotResolvedInTextIssue" />
 		<Class class = "ICSharpCode.NRefactory.CSharp.Refactoring.ObjectCreationAsStatementIssue" />
 		<Class class = "ICSharpCode.NRefactory.CSharp.Refactoring.OperatorIsCanBeUsedIssue" />
-		<Class class = "ICSharpCode.NRefactory.CSharp.Refactoring.OptionalParameterCouldBeSkippedIssue" />
 		<Class class = "ICSharpCode.NRefactory.CSharp.Refactoring.OptionalParameterHierarchyMismatchIssue" />
 		<Class class = "ICSharpCode.NRefactory.CSharp.Refactoring.OptionalParameterRefOutIssue" />
 		<Class class = "ICSharpCode.NRefactory.CSharp.Refactoring.ParameterCanBeDeclaredWithBaseTypeIssue" />
@@ -495,5 +506,11 @@
 		                type  = "Secondary"
 		                class = "CSharpBinding.FormsDesigner.FormsDesignerSecondaryDisplayBinding"
 		                fileNamePattern = "\.cs$"/>
+	</Path>
+	
+	<!-- Autostart command for initialization -->
+	<Path name = "/SharpDevelop/Autostart">
+		<Class id    = "CSharpFormattingOptionsPersistenceInitCommand"
+		       class = "CSharpBinding.FormattingStrategy.CSharpFormattingOptionsPersistenceInitCommand"/>
 	</Path>
 </AddIn>

@@ -42,6 +42,8 @@ namespace ICSharpCode.NRefactory.TypeSystem
 		/// </remarks>
 		public static IEnumerable<IType> GetAllBaseTypes(this IType type)
 		{
+			if (type == null)
+				throw new ArgumentNullException("type");
 			BaseTypeCollector collector = new BaseTypeCollector();
 			collector.CollectBaseTypes(type);
 			return collector;
@@ -57,6 +59,8 @@ namespace ICSharpCode.NRefactory.TypeSystem
 		/// </remarks>
 		public static IEnumerable<IType> GetNonInterfaceBaseTypes(this IType type)
 		{
+			if (type == null)
+				throw new ArgumentNullException("type");
 			BaseTypeCollector collector = new BaseTypeCollector();
 			collector.SkipImplementedInterfaces = true;
 			collector.CollectBaseTypes(type);
@@ -419,6 +423,15 @@ namespace ICSharpCode.NRefactory.TypeSystem
 		public static IEnumerable<ITypeDefinition> GetAllTypeDefinitions (this ICompilation compilation)
 		{
 			return compilation.Assemblies.SelectMany(a => a.GetAllTypeDefinitions());
+		}
+
+		/// <summary>
+		/// Gets all top level type definitions in the compilation.
+		/// This may include types from referenced assemblies that are not accessible in the main assembly.
+		/// </summary>
+		public static IEnumerable<ITypeDefinition> GetTopLevelTypeDefinitons (this ICompilation compilation)
+		{
+			return compilation.Assemblies.SelectMany(a => a.TopLevelTypeDefinitions);
 		}
 		
 		/// <summary>

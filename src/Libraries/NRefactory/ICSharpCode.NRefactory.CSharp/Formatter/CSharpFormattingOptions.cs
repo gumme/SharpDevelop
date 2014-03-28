@@ -150,12 +150,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			set;
 		}
 
-		public bool AlignEmbeddedUsingStatements { // tested
-			get;
-			set;
-		}
-
-		public bool AlignEmbeddedIfStatements { // tested
+		public bool AlignEmbeddedStatements { // tested
 			get;
 			set;
 		}
@@ -447,6 +442,16 @@ namespace ICSharpCode.NRefactory.CSharp
 		}
 
 		public bool SpaceWithinConstructorDeclarationParentheses { // tested
+			get;
+			set;
+		}
+
+		public NewLinePlacement NewLineBeforeConstructorInitializerColon {
+			get;
+			set;
+		}
+
+		public NewLinePlacement NewLineAfterConstructorInitializerColon {
 			get;
 			set;
 		}

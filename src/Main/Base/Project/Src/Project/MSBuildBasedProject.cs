@@ -1231,6 +1231,21 @@ namespace ICSharpCode.SharpDevelop.Project
 				try {
 					LoadProjectInternal(loadInformation);
 				} catch (InvalidProjectFileException ex) {
+					if (ex.ErrorCode == "MSB4132") {
+						if (UpgradeToolsVersion(loadInformation)) {
+							// successful upgrade has loaded the project
+						} else if (projectFile != null && projectFile.ToolsVersion == "12.0") {
+							// ToolsVersion 12.0 not found: the user needs to install Microsoft Build Tools 2013
+							throw new ToolNotFoundProjectLoadException(ex.Message, ex) {
+								Description = "Microsoft Build Tools 2013 are necessary for opening Visual Studio 2013 solutions.",
+								LinkTarget = "http://www.microsoft.com/en-us/download/details.aspx?id=40760"
+							};
+						} else {
+							throw;
+						}
+					} else {
+						throw;
+					}
 					if (!(ex.ErrorCode == "MSB4132" && UpgradeToolsVersion(loadInformation))) {
 						throw;
 					}
@@ -1452,7 +1467,15 @@ namespace ICSharpCode.SharpDevelop.Project
 					existing = projectFile.CreateProjectExtensionsElement();
 					return new XElement(name);
 				}
-				return XElement.Parse(existing[name]);
+				string content = existing[name];
+				if (string.IsNullOrEmpty(content))
+					return new XElement(name);
+				try {
+					return XElement.Parse(content);
+				} catch (XmlException ex) {
+					LoggingService.Warn(ex);
+					return new XElement(name);
+				}
 			}
 		}
 		

@@ -315,7 +315,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 			return context;
 		}
 		
-		public ResolveResult ResolveSnippet(FileName fileName, TextLocation fileLocation, ITextSource fileContent, string codeSnippet, ICompilation compilation, CancellationToken cancellationToken)
+		public ResolveResult ResolveSnippet(FileName fileName, TextLocation fileLocation, string codeSnippet, ITextSource fileContent, ICompilation compilation, CancellationToken cancellationToken)
 		{
 			var entry = GetFileEntry(fileName, true);
 			if (entry.parser == null)
@@ -328,7 +328,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 				compilation = GetCompilationForFile(fileName);
 			ResolveResult rr = entry.parser.ResolveSnippet(parseInfo, fileLocation, codeSnippet, compilation, cancellationToken);
 			LoggingService.Debug("Resolved " + fileLocation + " to " + rr);
-			return rr;
+			return rr ?? ErrorResolveResult.UnknownError;
 		}
 		
 		public Task<ResolveResult> ResolveAsync(FileName fileName, TextLocation location, ITextSource fileContent, ICompilation compilation, CancellationToken cancellationToken)

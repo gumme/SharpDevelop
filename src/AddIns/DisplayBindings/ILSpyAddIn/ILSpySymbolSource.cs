@@ -28,6 +28,7 @@ namespace ICSharpCode.ILSpyAddIn
 		{
 			var typeName = DecompiledTypeReference.FromTypeDefinition(method.DeclaringTypeDefinition);
 			if (typeName == null) return null;
+			SD.Log.DebugFormatted("GetSymbols for: {0}", typeName.ToFileName());
 			return SD.ParserService.ParseFile(typeName.ToFileName()) as ILSpyUnresolvedFile;
 		}
 		
@@ -102,7 +103,7 @@ namespace ICSharpCode.ILSpyAddIn
 			var context = new SimpleTypeResolveContext(method);
 			var loader = new CecilLoader();
 			
-			return symbols.LocalVariables.Select(
+			return symbols.LocalVariables.Where(v => v.OriginalVariable != null).Select(
 				v => new Debugger.ILLocalVariable() {
 					Index = v.OriginalVariable.Index,
 					Type = loader.ReadTypeReference(v.Type).Resolve(context),

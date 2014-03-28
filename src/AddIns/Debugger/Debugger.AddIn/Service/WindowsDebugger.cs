@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using Debugger;
 using ICSharpCode.SharpDevelop.Gui;
 using ICSharpCode.SharpDevelop.Gui.Pads;
+using ICSharpCode.SharpDevelop.Workbench;
 using Debugger.AddIn;
 using Debugger.AddIn.Breakpoints;
 using Debugger.AddIn.Tooltips;
@@ -462,7 +463,10 @@ namespace ICSharpCode.SharpDevelop.Services
 			OnIsProcessRunningChanged(EventArgs.Empty);
 			
 			CurrentProcess = e.Process;
-			CurrentThread = e.Thread;
+			if (e.Thread != null)
+				CurrentThread = e.Thread;
+			else if (CurrentThread != null && CurrentThread.HasExited)
+				CurrentThread = null;
 			CurrentStackFrame = CurrentThread != null ? CurrentThread.MostRecentStackFrame : null;
 			
 			// We can have several events happening at the same time
@@ -584,7 +588,7 @@ namespace ICSharpCode.SharpDevelop.Services
 				throw new GetValueException("no stackframe available!");
 			var location = CurrentStackFrame.NextStatement;
 			var fileName = new FileName(location.Filename);
-			var rr = SD.ParserService.ResolveSnippet(fileName, new TextLocation(location.StartLine, location.StartColumn), new ParseableFileContentFinder().Create(fileName), code, null, System.Threading.CancellationToken.None);
+			var rr = SD.ParserService.ResolveSnippet(fileName, new TextLocation(location.StartLine, location.StartColumn), code);
 			return new ExpressionEvaluationVisitor(CurrentStackFrame, EvalThread, CurrentStackFrame.AppDomain.Compilation, allowMethodInvoke, allowSetValue).Convert(rr);
 		}
 
@@ -660,6 +664,8 @@ namespace ICSharpCode.SharpDevelop.Services
 		
 		public override void JumpToCurrentLine(string sourceFullFilename, int startLine, int startColumn, int endLine, int endColumn)
 		{
+			if (string.IsNullOrEmpty(sourceFullFilename))
+				return;
 			IViewContent viewContent = FileService.OpenFile(sourceFullFilename);
 			if (viewContent != null) {
 				IPositionable positionable = viewContent.GetService<IPositionable>();
