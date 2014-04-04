@@ -17,19 +17,39 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.ComponentModel;
+using System.ComponentModel.Design;
 using System.Drawing;
 using System.IO;
 
+using System.Xml.Serialization;
 using ICSharpCode.Reporting.Globals;
+
+
 
 namespace ICSharpCode.Reporting.Items
 {
 	/// <summary>
 	/// Description of ReportSettings.
 	/// </summary>
-	public class ReportSettings
+	public class ReportSettingsDesigner:ComponentDesigner
 	{
+		const string settingsName = "ReportSettings";
+		public ReportSettingsDesigner()
+		{
+		}
 		
+		public override void Initialize(IComponent component)
+		{
+			base.Initialize(component);
+			component.Site.Name = ReportSettingsDesigner.settingsName;
+		}
+	}
+	
+	
+	[Designer(typeof(ReportSettingsDesigner))]
+	public class ReportSettings:Component
+	{
 		
 		public ReportSettings()
 		{
@@ -53,10 +73,10 @@ namespace ICSharpCode.Reporting.Items
 //			this.ConnectionString = String.Empty;
 //			this.CommandText = String.Empty;
 //			
-//			this.TopMargin = GlobalValues.DefaultPageMargin.Left;
-//			this.BottomMargin = GlobalValues.DefaultPageMargin.Bottom;
-//			this.LeftMargin = GlobalValues.DefaultPageMargin.Left;
-//			this.RightMargin = GlobalValues.DefaultPageMargin.Right;
+			this.TopMargin = GlobalValues.DefaultPageMargin.Left;
+			this.BottomMargin = GlobalValues.DefaultPageMargin.Bottom;
+			this.LeftMargin = GlobalValues.DefaultPageMargin.Left;
+			this.RightMargin = GlobalValues.DefaultPageMargin.Right;
 //			
 //			this.availableFields = new AvailableFieldsCollection();
 //			this.groupingsCollection = new GroupColumnCollection();
@@ -76,7 +96,7 @@ namespace ICSharpCode.Reporting.Items
 		{
 			get {
 				if (string.IsNullOrEmpty(reportName)) {
-					reportName = Globals.GlobalValues.DefaultReportName;
+					reportName = GlobalValues.DefaultReportName;
 				}
 				return reportName;
 			}

@@ -42,6 +42,7 @@ namespace ICSharpCode.Reports.Addin
 		{
 			styles["DialogFont"]     = Control.DefaultFont;
 			styles["HighlightColor"] = Color.LightYellow;
+			LoggingService.Info("Create UIService");
 		}
 		
 		public void SetUIDirty()
