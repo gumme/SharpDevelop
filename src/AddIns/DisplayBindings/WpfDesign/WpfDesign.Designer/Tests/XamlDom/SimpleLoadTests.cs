@@ -306,6 +306,20 @@ namespace ICSharpCode.WpfDesign.Tests.XamlDom
 		}
 		
 		[Test]
+		public void StandaloneList()
+		{
+			TestLoading(@"
+<ExampleClassList
+  xmlns=""" + XamlTypeFinderTests.XamlDomTestsNamespace + @"""
+  xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+    <ExampleClass OtherProp=""a""> </ExampleClass>
+    <ExampleClass OtherProp=""b"" />
+    <ExampleClass OtherProp=""c"" />
+</ExampleClassList>
+			");
+		}
+		
+		[Test]
 		public void ExampleServiceTest()
 		{
 			TestLoading(@"
