@@ -28,50 +28,86 @@ namespace ICSharpCode.WpfDesign.Tests.XamlDom
 	public class MarkupExtensionTests : TestHelper
 	{
 		[Test]
-		public void Test1()
+		public void TestBinding1()
 		{
 			TestMarkupExtension("Title=\"{Binding}\"");
 		}
 
 		[Test]
-		public void Test2()
+		public void TestBinding2()
 		{
 			TestMarkupExtension("Title=\"{Binding Some}\"");
 		}
 
 		[Test]
-		public void Test3()
+		public void TestBinding3()
 		{
 			TestMarkupExtension("Title=\"{ Binding  Some , ElementName = Some , Mode = TwoWay }\"");
 		}
 
 		[Test]
-		public void Test4()
+		public void TestType()
 		{
 			TestMarkupExtension("Content=\"{x:Type Button}\"");
 		}		
 
 		[Test]
-		public void Test5()
+		public void TestMyExtensionOnDependencyProperty()
 		{
 			TestMarkupExtension("Content=\"{t:MyExtension 1, 2}\"");
 		}
+		
+		[Test]
+		public void TestMyExtensionOnNormalProperty()
+		{
+			TestMarkupExtension("Owner=\"{t:MyExtension 1, 2}\"");
+		}
+		
+		[Test]
+		[Ignore("Fails because of XamlObjectServiceProvider, TargetObject getter must not call ValueOnInstance on parent property but keep a reference for parent collection in some way.")]
+		public void TestMyExtensionOnImplicitList()
+		{
+						TestLoading(@"
+<ExampleClassContainer
+  xmlns=""" + XamlTypeFinderTests.XamlDomTestsNamespace + @"""
+  xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+    <MyExtension/>
+</ExampleClassContainer>
+			");
+		}
+		
+		[Test]
+		[Ignore("Fails because of XamlObjectServiceProvider, TargetObject getter must not call ValueOnInstance on parent property but keep a reference for parent collection in some way.")]
+		public void TestMyExtensionOnExplicitList()
+		{
+						TestLoading(@"
+<ExampleClassContainer
+  xmlns=""" + XamlTypeFinderTests.XamlDomTestsNamespace + @"""
+  xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+   <ExampleClassContainer.OtherList>
+      <ExampleClassList>
+         <MyExtension/>
+      </ExampleClassList>
+   </ExampleClassContainer.OtherList>
+</ExampleClassContainer>
+			");
+		}
 
 		[Test]
-		public void Test6()
+		public void TestStatic()
 		{
 			TestMarkupExtension("Background=\"{x:Static SystemColors.ControlBrush}\"");
 		}
 
 		[Test]
 		[Ignore]
-		public void Test7()
+		public void TestDynamicResource()
 		{
 			TestMarkupExtension("Background=\"{DynamicResource {x:Static SystemColors.ControlBrushKey}}\"");
 		}
 
 		[Test]
-		public void Test8()
+		public void TestBindingRelativeSourceSelf()
 		{
 			TestMarkupExtension("Content=\"{Binding Some, RelativeSource={RelativeSource Self}}\"");
 		}
@@ -80,7 +116,7 @@ namespace ICSharpCode.WpfDesign.Tests.XamlDom
 		//[ExpectedException] 
 		// Must differ from official XamlReader result, because Static dereference
 		// To catch this we should use XamlDocument.Save() instead of XamlWriter.Save(instance)
-		public void Test9()
+		public void TestStaticWithMyStaticClass()
 		{
 			TestMarkupExtension("Content=\"{x:Static t:MyStaticClass.StaticString}\"");
 		}
@@ -114,16 +150,62 @@ namespace ICSharpCode.WpfDesign.Tests.XamlDom
 	{
 		public static string StaticString = "a";
 	}
-
+	
 	public class MyExtension : MarkupExtension
 	{
+		public MyExtension()
+		{
+		}
+		
 		public MyExtension(object p1, object p2)
 		{
 		}
-
+		
 		public override object ProvideValue(IServiceProvider serviceProvider)
 		{
+			var provideValueTarget = (IProvideValueTarget)serviceProvider.GetService(typeof(IProvideValueTarget));
+			if (provideValueTarget == null) {
+				throw new InvalidOperationException("IProvideValueTarget not available.");
+			}
+			
+			string targetPropertyDescription = provideValueTarget.GetTargetPropertyDescription();
+			TestHelperLog.Log(GetType().Name + ".ProvideValue target property: " + targetPropertyDescription);
+			
+			var targetObject = provideValueTarget.TargetObject;
+			
+			string targetObjectDescription = targetObject != null ? targetObject.GetType().Name + " (" + targetObject.GetType().AssemblyQualifiedName + ")" : "{null}";
+			TestHelperLog.Log(GetType().Name + ".ProvideValue target object: " + targetObjectDescription);
+			
+			// To support MarkupExtension tests on lists.
+			if(targetObject is System.Collections.Generic.List<ExampleClass>) {
+				return new ExampleClass();
+			}
+			
 			return null;
+		}
+	}
+	
+	public static class ProvideValueTargetExtensions
+	{
+		public static string GetTargetPropertyDescription(this IProvideValueTarget provideValueTarget)
+		{
+			var targetProperty = provideValueTarget.TargetProperty;
+			
+			var propertyInfo = targetProperty as System.Reflection.PropertyInfo;
+			if (propertyInfo != null) {
+				TestHelperLog.Log("GetTargetPropertyDescription found PropertyInfo.");
+				return propertyInfo.Name + " (" + propertyInfo.PropertyType.AssemblyQualifiedName + ")";
+			} else {
+				var dependencyProperty = targetProperty as System.Windows.DependencyProperty;
+				if (dependencyProperty != null) {
+					TestHelperLog.Log("GetTargetPropertyDescription found DependencyProperty, returning type.");
+					return dependencyProperty.Name + " (" + dependencyProperty.PropertyType.AssemblyQualifiedName + ")";
+				}
+			}
+			
+			TestHelperLog.Log(String.Format("GetTargetPropertyDescription found {0}; returning unknown.", targetProperty != null ? targetProperty.GetType().AssemblyQualifiedName : "{null}"));
+			
+			return "<unknown>";
 		}
 	}
 }

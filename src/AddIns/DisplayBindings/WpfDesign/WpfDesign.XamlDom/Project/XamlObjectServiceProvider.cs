@@ -78,7 +78,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 					return null;
 				}
 
-				if (parentProperty.IsCollection) {
+				if (parentProperty.IsCollection && parentProperty.PropertyValue == null) {
 					return parentProperty.ValueOnInstance;
 				}
 
@@ -92,12 +92,22 @@ namespace ICSharpCode.WpfDesign.XamlDom
 		public object TargetProperty {
 			get {
 				var parentProperty = XamlObject.ParentProperty;
-
+				
 				if (parentProperty == null) {
 					return null;
 				}
-
-				return parentProperty.DependencyProperty;
+				
+				if (parentProperty.IsCollection && parentProperty.PropertyValue == null) {
+					return null;
+				}
+				
+				object targetProperty = parentProperty.DependencyProperty;
+				
+				if (targetProperty == null) {
+					targetProperty = parentProperty.propertyInfo.TargetType.GetProperty(parentProperty.propertyInfo.Name);
+				}
+				
+				return targetProperty;
 			}
 		}
 
