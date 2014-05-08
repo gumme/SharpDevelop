@@ -25,10 +25,12 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using System.Linq;
 
 using ICSharpCode.WpfDesign.Adorners;
 using ICSharpCode.WpfDesign.Designer.Controls;
 using ICSharpCode.WpfDesign.Designer.Xaml;
+using ICSharpCode.WpfDesign.Extensions;
 
 namespace ICSharpCode.WpfDesign.Designer
 {
@@ -353,6 +355,16 @@ namespace ICSharpCode.WpfDesign.Designer
 		int dx = 0;
 		int dy = 0;
 		
+		bool PreventDefaultKeyDownAction(Extension e)
+		{
+			if (e is IKeyDown)
+			{
+				return (e as IKeyDown).InvokeDefaultAction;
+			}
+			return true;
+		}
+
+		
 		private void DesignPanel_KeyUp(object sender, KeyEventArgs e)
 		{
 			if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down)
@@ -364,18 +376,51 @@ namespace ICSharpCode.WpfDesign.Designer
 					placementOp = null;
 				}
 			}
+
+			//pass the key event to the underlying objects if they have implemented IKeyUp interface
+			//OBS!!!! this call needs to be here, after the _currentOperation.Commit().
+			//In case the underlying object has a operation of its own this operation needs to be commited first
+			foreach (DesignItem di in Context.Services.Selection.SelectedItems)
+			{
+				foreach (Extension ext in di.Extensions)
+				{
+					if (ext is IKeyUp)
+					{
+						(ext as IKeyUp).KeyUpAction(sender, e);
+					}
+				}
+			}
 		}
 		
 		void DesignPanel_KeyDown(object sender, KeyEventArgs e)
 		{
+
+			//pass the key event down to the underlying objects if they have implemented IKeyUp interface
+			//OBS!!!! this call needs to be here, before the PlacementOperation.Start.
+			//In case the underlying object has a operation of its own this operation needs to be set first
+			foreach (DesignItem di in Context.Services.Selection.SelectedItems)
+			{
+				foreach (Extension ext in di.Extensions)
+				{
+					if (ext is IKeyDown)
+					{
+						(ext as IKeyDown).KeyDownAction(sender, e);
+					}
+				}
+			}
+
 			if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down)
 			{
 				e.Handled = true;
 				
 				if (placementOp == null) {
+                    List<DesignItem> placedItems = Context.Services.Selection.SelectedItems.Where(x => x.Extensions.All(PreventDefaultKeyDownAction)).ToList();
+                    
+                    if (placedItems.Count < 1) return;
+                    
 					dx = 0;
 					dy = 0;
-					placementOp = PlacementOperation.Start(Context.Services.Selection.SelectedItems, PlacementType.Move);
+                    placementOp = PlacementOperation.Start(placedItems, PlacementType.Move);
 				}
 				
 				
