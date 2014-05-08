@@ -87,7 +87,7 @@ namespace ICSharpCode.WpfDesign.Designer.Services
 					if (e.Data.GetData(typeof(CreateComponentTool)) != this) return;
 					// TODO: dropLayer in designPanel
 					designPanel.IsAdornerLayerHitTestVisible = false;
-					DesignPanelHitTestResult result = designPanel.HitTest(p, false, true);
+					DesignPanelHitTestResult result = designPanel.HitTest(p, false, true, HitTestType.Default);
 					
 					if (result.ModelHit != null) {
 						designPanel.Focus();
@@ -197,7 +197,7 @@ namespace ICSharpCode.WpfDesign.Designer.Services
 			if (e.ChangedButton == MouseButton.Left && MouseGestureBase.IsOnlyButtonPressed(e, MouseButton.Left)) {
 				e.Handled = true;
 				IDesignPanel designPanel = (IDesignPanel)sender;
-				DesignPanelHitTestResult result = designPanel.HitTest(e.GetPosition(designPanel), false, true);
+				DesignPanelHitTestResult result = designPanel.HitTest(e.GetPosition(designPanel), false, true, HitTestType.Default);
 				if (result.ModelHit != null) {
 					IPlacementBehavior behavior = result.ModelHit.GetBehavior<IPlacementBehavior>();
 					if (behavior != null) {

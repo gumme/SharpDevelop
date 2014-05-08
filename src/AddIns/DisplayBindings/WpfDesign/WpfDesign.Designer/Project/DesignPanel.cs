@@ -35,6 +35,10 @@ namespace ICSharpCode.WpfDesign.Designer
 	public sealed class DesignPanel : Decorator, IDesignPanel, INotifyPropertyChanged
 	{
 		#region Hit Testing
+		
+		private List<DependencyObject> hitTestElements = new List<DependencyObject>();
+		private DependencyObject lastElement;
+		
 		/// <summary>
 		/// this element is always hit (unless HitTestVisible is set to false)
 		/// </summary>
@@ -70,24 +74,28 @@ namespace ICSharpCode.WpfDesign.Designer
 				
 				if (designItem != null && designItem.IsDesignTimeLocked) {
 					return HitTestFilterBehavior.ContinueSkipSelfAndChildren;
-				}
-				
+				}			
 			}
 			
+			hitTestElements.Add(element);
+						
 			return HitTestFilterBehavior.Continue;
 		}
 		
 		/// <summary>
 		/// Performs a custom hit testing lookup for the specified mouse event args.
 		/// </summary>
-		public DesignPanelHitTestResult HitTest(Point mousePosition, bool testAdorners, bool testDesignSurface)
+		public DesignPanelHitTestResult HitTest(Point mousePosition, bool testAdorners, bool testDesignSurface, HitTestType hitTestType)
 		{
+			hitTestElements.Clear();
+			
 			DesignPanelHitTestResult result = DesignPanelHitTestResult.NoHit;
 			HitTest(mousePosition, testAdorners, testDesignSurface,
-			        delegate(DesignPanelHitTestResult r) {
-			        	result = r;
-			        	return false;
-			        });
+				delegate(DesignPanelHitTestResult r) {
+					result = r;
+					return false;
+				}, hitTestType);
+			
 			return result;
 		}
 		
@@ -95,7 +103,7 @@ namespace ICSharpCode.WpfDesign.Designer
 		/// Performs a hit test on the design surface, raising <paramref name="callback"/> for each match.
 		/// Hit testing continues while the callback returns true.
 		/// </summary>
-		public void HitTest(Point mousePosition, bool testAdorners, bool testDesignSurface, Predicate<DesignPanelHitTestResult> callback)
+		public void HitTest(Point mousePosition, bool testAdorners, bool testDesignSurface, Predicate<DesignPanelHitTestResult> callback, HitTestType hitTestType)
 		{
 			if (mousePosition.X < 0 || mousePosition.Y < 0 || mousePosition.X > this.RenderSize.Width || mousePosition.Y > this.RenderSize.Height) {
 				return;
@@ -106,6 +114,8 @@ namespace ICSharpCode.WpfDesign.Designer
 
 			HitTestFilterCallback filterBehavior = CustomHitTestFilterBehavior ?? FilterHitTestInvisibleElements;
 			CustomHitTestFilterBehavior = null;
+			hitTestElements.Clear();
+			
 			if (testAdorners) {
 
 				RunHitTest(
@@ -138,6 +148,19 @@ namespace ICSharpCode.WpfDesign.Designer
 
 							ViewService viewService = _context.Services.View;
 							DependencyObject obj = result.VisualHit;
+							
+							if (hitTestType == HitTestType.ElementSelection)
+							{
+								if (Keyboard.IsKeyDown(Key.LeftAlt))
+								if (lastElement != null && lastElement != _context.RootItem.Component &&
+									hitTestElements.Contains(lastElement))
+								{
+									var idx = hitTestElements.IndexOf(lastElement) - 1;
+									if (idx >= 0)
+										obj = hitTestElements[idx];
+								}
+							}
+							
 							while (obj != null) {
 								if ((customResult.ModelHit = viewService.GetModel(obj)) != null)
 									break;
@@ -146,6 +169,13 @@ namespace ICSharpCode.WpfDesign.Designer
 							if (customResult.ModelHit == null) {
 								customResult.ModelHit = _context.RootItem;
 							}
+							
+							if (hitTestType == HitTestType.ElementSelection)
+							{
+								lastElement = obj;
+							}
+							
+							
 							continueHitTest = callback(customResult);
 							return continueHitTest ? HitTestResultBehavior.Continue : HitTestResultBehavior.Stop;
 						} else {
