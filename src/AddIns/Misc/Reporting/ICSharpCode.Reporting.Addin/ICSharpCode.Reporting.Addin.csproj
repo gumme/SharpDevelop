@@ -82,6 +82,7 @@
     <Folder Include="src\Globals" />
     <Folder Include="src\DesignableItems" />
     <Folder Include="src\Factory" />
+    <Folder Include="src\Dialogs" />
     <Folder Include="src\Wizard" />
     <Folder Include="src\Toolbox" />
     <Folder Include="src\TypeProvider" />
@@ -90,12 +91,19 @@
     <Folder Include="src\Views" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\..\..\Main\GlobalAssemblyInfo.cs">
+      <Link>Configuration\GlobalAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Configuration\AssemblyInfo.cs" />
     <Compile Include="src\Commands\ViewCommands.cs" />
+    <Compile Include="src\DesignableItems\AbstractGraphicItem.cs" />
     <Compile Include="src\DesignableItems\AbstractItem.cs" />
+    <Compile Include="src\DesignableItems\BaseCircleItem.cs" />
     <Compile Include="src\DesignableItems\BaseLineItem.cs" />
+    <Compile Include="src\DesignableItems\BaseRectangleItem.cs" />
     <Compile Include="src\DesignableItems\BaseSection.cs" />
     <Compile Include="src\DesignableItems\BaseTextItem.cs" />
+    <Compile Include="src\DesignableItems\BaseDataItem.cs" />
     <Compile Include="src\DesignableItems\ReportSettings.cs" />
     <Compile Include="src\DesignerBinding\DesignerBinding.cs" />
     <Compile Include="src\DesignerBinding\DesignerGenerator.cs" />
@@ -104,14 +112,18 @@
     <Compile Include="src\DesignerBinding\ReportDefinitionDeserializer.cs" />
     <Compile Include="src\DesignerBinding\ReportDesignerLoader.cs" />
     <Compile Include="src\Designer\AbstractDesigner.cs" />
+    <Compile Include="src\Designer\DataItemDesigner.cs" />
     <Compile Include="src\Designer\LineDesigner.cs" />
+    <Compile Include="src\Designer\ContainerDesigner.cs" />
     <Compile Include="src\Designer\ReportRootDesigner.cs" />
     <Compile Include="src\Designer\ReportSettingsDesigner.cs" />
     <Compile Include="src\Designer\RootReportModel.cs" />
     <Compile Include="src\Designer\SectionDesigner.cs" />
     <Compile Include="src\Designer\TextItemDesigner.cs" />
+    <Compile Include="src\Dialogs\DataTypeStringConverter.cs" />
     <Compile Include="src\Factory\CreateFormSheetFromModel.cs" />
     <Compile Include="src\Globals\DesignerGlobals.cs" />
+    <Compile Include="src\Globals\GlobalLists.cs" />
     <Compile Include="src\Globals\StringWriterWithEncoding.cs" />
     <Compile Include="src\Services\DefaultMemberRelationshipService.cs" />
     <Compile Include="src\Services\DesignerSerializationService.cs" />
@@ -126,7 +138,10 @@
     <Compile Include="src\Toolbox\SideTabItemDesigner.cs" />
     <Compile Include="src\Toolbox\ToolboxProvider.cs" />
     <Compile Include="src\TypeProvider\AbstractItemTypeProvider.cs" />
+    <Compile Include="src\TypeProvider\CircleItemTypeProvider.cs" />
+    <Compile Include="src\TypeProvider\DataItemTypeProvider.cs" />
     <Compile Include="src\TypeProvider\LineItemTypeProvider.cs" />
+    <Compile Include="src\TypeProvider\RectangleItemTypeProvider.cs" />
     <Compile Include="src\TypeProvider\SectionItemTypeProvider.cs" />
     <Compile Include="src\TypeProvider\TextItemTypeProvider.cs" />
     <Compile Include="src\TypeProvider\TypeProviderHelper.cs" />

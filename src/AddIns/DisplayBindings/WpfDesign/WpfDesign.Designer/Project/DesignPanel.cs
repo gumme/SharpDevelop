@@ -54,7 +54,7 @@ namespace ICSharpCode.WpfDesign.Designer
 		void RunHitTest(Visual reference, Point point, HitTestFilterCallback filterCallback, HitTestResultCallback resultCallback)
 		{
 			VisualTreeHelper.HitTest(reference, filterCallback, resultCallback,
-			                         new PointHitTestParameters(point));
+				new PointHitTestParameters(point));
 		}
 		
 		HitTestFilterBehavior FilterHitTestInvisibleElements(DependencyObject potentialHitTestTarget)
@@ -128,7 +128,7 @@ namespace ICSharpCode.WpfDesign.Designer
 						}
 					});
 			}
-
+			
 			if (continueHitTest && testDesignSurface) {
 				RunHitTest(
 					this.Child, mousePosition, filterBehavior,
@@ -161,9 +161,6 @@ namespace ICSharpCode.WpfDesign.Designer
 		DesignContext _context;
 		readonly EatAllHitTestRequests _eatAllHitTestRequests;
 		readonly AdornerLayer _adornerLayer;
-		PlacementOperation _currentOperation;
-		bool _moving = false;
-		int _movingDistance;
 		
 		public DesignPanel()
 		{
@@ -231,7 +228,7 @@ namespace ICSharpCode.WpfDesign.Designer
 				}
 			}
 		}
-
+		
 		/// <summary>
 		/// Enables / Disables the Raster Placement
 		/// </summary>
@@ -327,15 +324,20 @@ namespace ICSharpCode.WpfDesign.Designer
 		}
 		#endregion
 		
+		PlacementOperation placementOp;
+		int dx = 0;
+		int dy = 0;
+		
 		private void DesignPanel_KeyUp(object sender, KeyEventArgs e)
 		{
 			if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down)
 			{
-				if (_currentOperation != null)
-					_currentOperation.Commit();
-				_currentOperation = null;
-				_moving = false;
 				e.Handled = true;
+				
+				if (placementOp != null) {
+					placementOp.Commit();
+					placementOp = null;
+				}
 			}
 		}
 		
@@ -344,40 +346,37 @@ namespace ICSharpCode.WpfDesign.Designer
 			if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down)
 			{
 				e.Handled = true;
-
-				if (!_moving)
-				{
-					_currentOperation = PlacementOperation.Start(Context.Services.Selection.SelectedItems, PlacementType.Move);
-					_moving = true;
-					_movingDistance = 0;
+				
+				if (placementOp == null) {
+					dx = 0;
+					dy = 0;
+					placementOp = PlacementOperation.Start(Context.Services.Selection.SelectedItems, PlacementType.Move);
 				}
 				
-				var dx1 = (e.Key == Key.Left) ? Keyboard.IsKeyDown(Key.LeftShift) ? _movingDistance - 10 : _movingDistance - 1 : 0;
-				var dy1 = (e.Key == Key.Up) ? Keyboard.IsKeyDown(Key.LeftShift) ? _movingDistance - 10 : _movingDistance - 1 : 0;
-				var dx2 = (e.Key == Key.Right) ? Keyboard.IsKeyDown(Key.LeftShift) ? _movingDistance + 10 : _movingDistance + 1 : 0;
-				var dy2 = (e.Key == Key.Down) ? Keyboard.IsKeyDown(Key.LeftShift) ? _movingDistance + 10 : _movingDistance + 1 : 0;
 				
-				foreach (PlacementInformation info in _currentOperation.PlacedItems)
+				dx += (e.Key == Key.Left) ? Keyboard.IsKeyDown(Key.LeftShift) ? -10 : -1 : 0;
+				dy += (e.Key == Key.Up) ? Keyboard.IsKeyDown(Key.LeftShift) ? -10 : -1 : 0;
+				dx += (e.Key == Key.Right) ? Keyboard.IsKeyDown(Key.LeftShift) ? 10 : 1 : 0;
+				dy += (e.Key == Key.Down) ? Keyboard.IsKeyDown(Key.LeftShift) ? 10 : 1 : 0;
+				foreach (PlacementInformation info in placementOp.PlacedItems)
 				{
 					if (!Keyboard.IsKeyDown(Key.LeftCtrl))
 					{
-						info.Bounds = new Rect(info.OriginalBounds.Left + dx1 + dx2,
-						                       info.OriginalBounds.Top + dy1 + dy2,
-						                       info.OriginalBounds.Width,
-						                       info.OriginalBounds.Height);
+						info.Bounds = new Rect(info.OriginalBounds.Left + dx,
+							info.OriginalBounds.Top + dy,
+							info.OriginalBounds.Width,
+							info.OriginalBounds.Height);
 					}
 					else
 					{
 						info.Bounds = new Rect(info.OriginalBounds.Left,
-						                       info.OriginalBounds.Top,
-						                       info.OriginalBounds.Width + dx1 + dx2,
-						                       info.OriginalBounds.Height + dy1 + dy2);
+							info.OriginalBounds.Top,
+							info.OriginalBounds.Width + dx,
+							info.OriginalBounds.Height + dy);
 					}
 					
-					_currentOperation.CurrentContainerBehavior.SetPosition(info);
+					placementOp.CurrentContainerBehavior.SetPosition(info);
 				}
-
-				_movingDistance = (dx1 + dx2 + dy1 + dy2);
 			}
 		}
 		

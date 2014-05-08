@@ -155,7 +155,7 @@ namespace CSharpBinding.FormattingStrategy
 						if ((inString && !verbatim) || inChar)
 							++i; // skip next character
 						break;
-				}
+			}
 			}
 			return curlyCounter > 0;
 		}
@@ -269,16 +269,43 @@ namespace CSharpBinding.FormattingStrategy
 		
 		public override void FormatLines(ITextEditor textArea)
 		{
+			// Format current selection or whole document
+			int formattedTextOffset = 0;
+			int formattedTextLength = textArea.Document.TextLength;
+			if (textArea.SelectionLength != 0) {
+				formattedTextOffset = textArea.SelectionStart;
+				formattedTextLength = textArea.SelectionLength;
+			}
+			FormatCode(textArea, formattedTextOffset, formattedTextLength, false);
+		}
+		
+		/// <summary>
+		/// Formats a code section according to currently effective formatting settings.
+		/// </summary>
+		/// <param name="textArea">Text editor instance to format code in.</param>
+		/// <param name="offset">Start offset of formatted code.</param>
+		/// <param name="length">Length of formatted code.</param>
+		/// <param name="respectAutoFormattingSetting">
+		/// Set to <c>true</c> to perform formatting only if auto-formatting setting is active.
+		/// If <c>false</c>, formatting will be performed in any case.
+		/// </param>
+		/// <returns><c>True</c>, if code has been formatted, <c>false</c> if auto-formatting is currently forbidden.</returns>
+		private bool FormatCode(ITextEditor textArea, int offset, int length, bool respectAutoFormattingSetting)
+		{
+			if ((offset > textArea.Document.TextLength) || ((offset + length) > textArea.Document.TextLength))
+				return false;
+			if (respectAutoFormattingSetting && !CSharpFormattingOptionsPersistence.AutoFormatting)
+				return false;
+			
 			using (textArea.Document.OpenUndoGroup()) {
-				// In any other case: Simply format selection or whole document
 				var formattingOptions = CSharpFormattingOptionsPersistence.GetProjectOptions(SD.ProjectService.CurrentProject);
-				int formattedTextOffset = 0;
-				int formattedTextLength = textArea.Document.TextLength;
-				if (textArea.SelectionLength != 0) {
-					formattedTextOffset = textArea.SelectionStart;
-					formattedTextLength = textArea.SelectionLength;
+				try {
+					CSharpFormatterHelper.Format(textArea, offset, length, formattingOptions.OptionsContainer);
+				} catch (Exception) {
+					// Exceptions in formatting might happen if code contains syntax errors, we have to catch them
+					return false;
 				}
-				CSharpFormatterHelper.Format(textArea, formattedTextOffset, formattedTextLength, formattingOptions.OptionsContainer);
+				return true;
 			}
 		}
 		
@@ -287,6 +314,24 @@ namespace CSharpBinding.FormattingStrategy
 			using (textArea.Document.OpenUndoGroup()) {
 				FormatLineInternal(textArea, textArea.Caret.Line, textArea.Caret.Offset, ch);
 			}
+		}
+		
+		bool FormatStatement(ITextEditor textArea, int cursorOffset, int formattingStartOffset)
+		{
+			var line = textArea.Document.GetLineByOffset(formattingStartOffset);
+			int lineOffset = line.Offset;
+			// Walk up the lines until we arrive at previous statement, block, comment or preprocessor directive
+			while (line.PreviousLine != null) {
+				line = line.PreviousLine;
+				string lineText = textArea.Document.GetText(line.Offset, line.Length);
+				if (IsLineEndOfStatement(lineText)) {
+					// Previous line is another statement, don't format it
+					break;
+				}
+				lineOffset = line.Offset;
+			}
+			
+			return FormatCode(textArea, lineOffset, cursorOffset - lineOffset, true);
 		}
 		
 		void FormatLineInternal(ITextEditor textArea, int lineNr, int cursorOffset, char ch)
@@ -313,8 +358,17 @@ namespace CSharpBinding.FormattingStrategy
 						sb.Append(indentation);
 						sb.Append("/// </summary>");
 						
+						IUnresolvedMethod method = null;
 						if (member is IUnresolvedMethod) {
-							IUnresolvedMethod method = (IUnresolvedMethod)member;
+							method = (IUnresolvedMethod)member;
+						} else if (member is IUnresolvedTypeDefinition) {
+							IUnresolvedTypeDefinition type = (IUnresolvedTypeDefinition) member;
+							if (type.Kind == TypeKind.Delegate) {
+								method = type.Methods.FirstOrDefault(m => m.Name == "Invoke");
+							}
+						}
+						
+						if (method != null) {
 							for (int i = 0; i < method.Parameters.Count; ++i) {
 								sb.Append(terminator);
 								sb.Append(indentation);
@@ -331,8 +385,8 @@ namespace CSharpBinding.FormattingStrategy
 								}
 							}
 						}
-						textArea.Document.Insert(cursorOffset, sb.ToString());
 						
+						textArea.Document.Insert(cursorOffset, sb.ToString());
 						textArea.Caret.Offset = cursorOffset + indentation.Length + "/// ".Length + " <summary>".Length + terminator.Length;
 					}
 				}
@@ -375,11 +429,28 @@ namespace CSharpBinding.FormattingStrategy
 				case ':':
 				case ')':
 				case ']':
-				case '}':
 				case '{':
 					//if (textArea.Document.TextEditorProperties.IndentStyle == IndentStyle.Smart) {
 					IndentLine(textArea, curLine);
 					//}
+					break;
+				case '}':
+					// Try to get corresponding block beginning brace
+					var bracketSearchResult = textArea.Language.BracketSearcher.SearchBracket(textArea.Document, cursorOffset);
+					if (bracketSearchResult != null) {
+						// Format the block
+						if (!FormatStatement(textArea, cursorOffset, bracketSearchResult.OpeningBracketOffset)) {
+							// No auto-formatting seems to be active, at least indent the line
+							IndentLine(textArea, curLine);
+						}
+					}
+					break;
+				case ';':
+					// Format this line
+					if (!FormatStatement(textArea, cursorOffset, cursorOffset)) {
+						// No auto-formatting seems to be active, at least indent the line
+						IndentLine(textArea, curLine);
+					}
 					break;
 				case '\n':
 					string lineAboveText = lineAbove == null ? "" : textArea.Document.GetText(lineAbove);
@@ -445,7 +516,41 @@ namespace CSharpBinding.FormattingStrategy
 						}
 					}
 					return;
+		}
+		}
+		
+		bool IsLineEndOfStatement(string lineText)
+		{
+			string normalizedLine = null;
+			
+			// Look if there is a comment at the end of line
+			int indexOfSingleLineComment = lineText.LastIndexOf("//");
+			if (indexOfSingleLineComment > -1) {
+				normalizedLine = lineText.Substring(0, indexOfSingleLineComment);
+			} else {
+				normalizedLine = lineText;
 			}
+			
+			normalizedLine = normalizedLine.Trim(' ', '\t');
+			
+			if (normalizedLine.EndsWith("*/")) {
+				int indexOfMultiLineCommentStart = normalizedLine.LastIndexOf("/*");
+				if (indexOfMultiLineCommentStart > -1) {
+					normalizedLine = normalizedLine.Substring(0, indexOfMultiLineCommentStart);
+				} else {
+					// Seems to be a multiline comment (no comment start on this line)
+					return true;
+				}
+			}
+			
+			// Usual statement endings
+			if (normalizedLine.StartsWith("#")
+				|| normalizedLine.EndsWith(";")
+				|| normalizedLine.EndsWith("{")
+				|| normalizedLine.EndsWith("}"))
+				return true;
+			
+			return false;
 		}
 		
 		/// <summary>
@@ -554,7 +659,7 @@ namespace CSharpBinding.FormattingStrategy
 						if ((inString && !verbatim) || inChar)
 							++i; // skip next character
 						break;
-				}
+			}
 			}
 			return (inString || inChar) ? 2 : 0;
 		}

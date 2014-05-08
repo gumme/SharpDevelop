@@ -71,6 +71,16 @@ namespace CSharpBinding.FormattingStrategy
 			}
 		}
 		
+		public static bool AutoFormatting
+		{
+			get {
+				return SD.PropertyService.Get("CSharpBinding.Formatting.AutoFormatting", true);
+			}
+			set {
+				SD.PropertyService.Set("CSharpBinding.Formatting.AutoFormatting", value);
+			}
+		}
+		
 		public static CSharpFormattingOptionsPersistence GlobalOptions
 		{
 			get;
@@ -108,7 +118,7 @@ namespace CSharpBinding.FormattingStrategy
 		{
 			// Load solution settings
 			SolutionOptions = new CSharpFormattingOptionsPersistence(
-				e.Solution.GlobalPreferences,
+				e.Solution.SDSettings,
 				new CSharpFormattingOptionsContainer(GlobalOptions.OptionsContainer)
 				{
 					DefaultText = StringParser.Parse("${res:CSharpBinding.Formatting.SolutionOptionReference}")
