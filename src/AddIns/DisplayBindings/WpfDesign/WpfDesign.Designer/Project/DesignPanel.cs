@@ -378,9 +378,9 @@ namespace ICSharpCode.WpfDesign.Designer
 			}
 
 			//pass the key event to the underlying objects if they have implemented IKeyUp interface
-			//OBS!!!! this call needs to be here, after the _currentOperation.Commit().
+			//OBS!!!! this call needs to be here, after the placementOp.Commit().
 			//In case the underlying object has a operation of its own this operation needs to be commited first
-			foreach (DesignItem di in Context.Services.Selection.SelectedItems)
+			foreach (DesignItem di in Context.Services.Selection.SelectedItems.Reverse())
 			{
 				foreach (Extension ext in di.Extensions)
 				{
