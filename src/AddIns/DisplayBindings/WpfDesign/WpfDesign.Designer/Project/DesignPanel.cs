@@ -355,12 +355,13 @@ namespace ICSharpCode.WpfDesign.Designer
 		int dx = 0;
 		int dy = 0;
 		
-		bool PreventDefaultKeyDownAction(Extension e)
+		bool InvokeDefaultKeyDownAction(Extension e)
 		{
-			if (e is IKeyDown)
-			{
-				return (e as IKeyDown).InvokeDefaultAction;
+			var keyDown = e as IKeyDown;
+			if (keyDown != null) {
+				return keyDown.InvokeDefaultAction;
 			}
+			
 			return true;
 		}
 
@@ -380,13 +381,11 @@ namespace ICSharpCode.WpfDesign.Designer
 			//pass the key event to the underlying objects if they have implemented IKeyUp interface
 			//OBS!!!! this call needs to be here, after the placementOp.Commit().
 			//In case the underlying object has a operation of its own this operation needs to be commited first
-			foreach (DesignItem di in Context.Services.Selection.SelectedItems.Reverse())
-			{
-				foreach (Extension ext in di.Extensions)
-				{
-					if (ext is IKeyUp)
-					{
-						(ext as IKeyUp).KeyUpAction(sender, e);
+			foreach (DesignItem di in Context.Services.Selection.SelectedItems.Reverse()) {
+				foreach (Extension ext in di.Extensions) {
+					var keyUp = ext as IKeyUp;
+					if (keyUp != null) {
+						keyUp.KeyUpAction(sender, e);
 					}
 				}
 			}
@@ -398,13 +397,11 @@ namespace ICSharpCode.WpfDesign.Designer
 			//pass the key event down to the underlying objects if they have implemented IKeyUp interface
 			//OBS!!!! this call needs to be here, before the PlacementOperation.Start.
 			//In case the underlying object has a operation of its own this operation needs to be set first
-			foreach (DesignItem di in Context.Services.Selection.SelectedItems)
-			{
-				foreach (Extension ext in di.Extensions)
-				{
-					if (ext is IKeyDown)
-					{
-						(ext as IKeyDown).KeyDownAction(sender, e);
+			foreach (DesignItem di in Context.Services.Selection.SelectedItems) {
+				foreach (Extension ext in di.Extensions) {
+					var keyDown = ext as IKeyDown;
+					if (keyDown != null) {
+						keyDown.KeyDownAction(sender, e);
 					}
 				}
 			}
@@ -414,7 +411,7 @@ namespace ICSharpCode.WpfDesign.Designer
 				e.Handled = true;
 				
 				if (placementOp == null) {
-                    List<DesignItem> placedItems = Context.Services.Selection.SelectedItems.Where(x => x.Extensions.All(PreventDefaultKeyDownAction)).ToList();
+                    List<DesignItem> placedItems = Context.Services.Selection.SelectedItems.Where(x => x.Extensions.All(InvokeDefaultKeyDownAction)).ToList();
                     
                     if (placedItems.Count < 1) return;
                     
