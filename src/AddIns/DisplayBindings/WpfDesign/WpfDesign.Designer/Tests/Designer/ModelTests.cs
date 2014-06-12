@@ -669,6 +669,11 @@ namespace ICSharpCode.WpfDesign.Tests.Designer
 		
 		public void AddNativeTypeAsResource(object component, string expectedXamlValue)
 		{
+			AddTypeAsResource(component, expectedXamlValue, "Controls0:", new string[] { "xmlns:Controls0=\"clr-namespace:System;assembly=mscorlib\""} );
+		}
+		
+		public void AddTypeAsResource(object component, string expectedXamlValue, string typePrefix, String[] additionalXmlns)
+		{
 			DesignItem textBlock = CreateCanvasContext("<TextBlock/>");
 			DesignItem canvas = textBlock.Parent;
 			
@@ -687,31 +692,12 @@ namespace ICSharpCode.WpfDesign.Tests.Designer
 			string typeName = component.GetType().Name;
 			
 			string expectedXaml = "<Canvas.Resources>\n" +
-								  "  <Controls0:" + typeName + " x:Key=\"res1\">" + expectedXamlValue + "</Controls0:" + typeName + ">\n" +
+								  "  <" + typePrefix + typeName + " x:Key=\"res1\">" + expectedXamlValue + "</" + typePrefix + typeName + ">\n" +
 								  "</Canvas.Resources>\n" +
 								  "<TextBlock Tag=\"{StaticResource ResourceKey=res1}\" />";
 			
-			AssertCanvasDesignerOutput(expectedXaml, textBlock.Context, "xmlns:Controls0=\"clr-namespace:System;assembly=mscorlib\"");
+			AssertCanvasDesignerOutput(expectedXaml, textBlock.Context, additionalXmlns);
 			AssertLog("");
-		}
-		
-		[Test]
-		public void AddStringAsResource()
-		{
-			AddNativeTypeAsResource("stringresource 1", "stringresource 1");
-		}
-		
-		[Test]
-		public void AddDoubleAsResource()
-		{
-			AddNativeTypeAsResource(0.0123456789d, "0.0123456789");
-		}
-		
-		[Test]
-		public void AddInt32AsResource()
-		{
-			const int i = 123;
-			AddNativeTypeAsResource(i, "123");
 		}
 		
 		[Test]
@@ -736,6 +722,37 @@ namespace ICSharpCode.WpfDesign.Tests.Designer
 			AssertCanvasDesignerOutput(expectedXaml, image.Context);
 			AssertLog("");
 		}
+		
+		[Test]
+		public void AddStringAsResource()
+		{
+			AddNativeTypeAsResource("stringresource 1", "stringresource 1");
+		}
+		
+		[Test]
+		public void AddDoubleAsResource()
+		{
+			AddNativeTypeAsResource(0.0123456789d, "0.0123456789");
+		}
+		
+		[Test]
+		public void AddInt32AsResource()
+		{
+			const int i = 123;
+			AddNativeTypeAsResource(i, "123");
+		}
+		
+		[Test]
+		public void AddWpfEnumAsResource()
+		{
+			AddTypeAsResource(VerticalAlignment.Center, "Center", "", new string[0]);
+		}
+		
+		[Test]
+		public void AddCustomEnumAsResource()
+		{
+			AddTypeAsResource(MyEnum.One, "One", "t:", new string[0]);
+		}
 	}
 	
 	public class MyMultiConverter : IMultiValueConverter
@@ -759,5 +776,10 @@ namespace ICSharpCode.WpfDesign.Tests.Designer
 			get { return stringProp; }
 			set { stringProp = value; }
 		}
+	}
+	
+	public enum MyEnum
+	{
+		One, Two
 	}
 }
