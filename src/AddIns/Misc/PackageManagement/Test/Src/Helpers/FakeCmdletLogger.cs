@@ -17,53 +17,39 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using ICSharpCode.Reporting.Exporter.Visitors;
-using ICSharpCode.Reporting.Interfaces.Export;
+using System.Management.Automation;
+using ICSharpCode.PackageManagement.Scripting;
 
-namespace ICSharpCode.Reporting.PageBuilder.ExportColumns
+namespace PackageManagement.Tests.Helpers
 {
-	/// <summary>
-	/// Description of ExportGraphics.
-	/// </summary>
-	/// 
-	public interface IExportGraphics:IExportColumn {
-		int Thickness {get;set;}
-		DashStyle DashStyle {get;set;}
-		LineCap StartLineCap {get;set;}
-		LineCap EndLineCap {get;set;}
-	}
-	
-	
-	public class ExportLine:ExportColumn,IExportGraphics,IAcceptor
+	public class FakeCmdletLogger : ICmdletLogger
 	{
-		public ExportLine()
+		public ErrorRecord ErrorRecordLogged;
+		
+		public void WriteError(ErrorRecord error)
 		{
+			ErrorRecordLogged = error;
 		}
 		
+		public string LineLogged;
 		
-		public void Accept(IVisitor visitor)
+		public void WriteLine(string message)
 		{
-			visitor.Visit(this);
+			LineLogged = message;
 		}
 		
+		public string VerboseMessageLogged;
 		
-		public override ICSharpCode.Reporting.Arrange.IMeasurementStrategy MeasurementStrategy()
+		public void WriteVerbose(string message)
 		{
-			throw new NotImplementedException();
+			VerboseMessageLogged = message;
 		}
 		
-		public int Thickness {get;set;}
+		public string WarningMessageLogged;
 		
-		public DashStyle DashStyle {get;set;}
-		
-		public LineCap StartLineCap {get;set;}
-		
-		public LineCap EndLineCap {get;set;}
-		
-		public Point FromPoint {get;set;}
-		
-		public Point ToPoint {get;set;}
+		public void WriteWarning(string message)
+		{
+			WarningMessageLogged = message;
+		}
 	}
 }

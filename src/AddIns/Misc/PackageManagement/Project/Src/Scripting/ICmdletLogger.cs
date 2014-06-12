@@ -17,53 +17,15 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using ICSharpCode.Reporting.Exporter.Visitors;
-using ICSharpCode.Reporting.Interfaces.Export;
+using System.Management.Automation;
 
-namespace ICSharpCode.Reporting.PageBuilder.ExportColumns
+namespace ICSharpCode.PackageManagement.Scripting
 {
-	/// <summary>
-	/// Description of ExportGraphics.
-	/// </summary>
-	/// 
-	public interface IExportGraphics:IExportColumn {
-		int Thickness {get;set;}
-		DashStyle DashStyle {get;set;}
-		LineCap StartLineCap {get;set;}
-		LineCap EndLineCap {get;set;}
-	}
-	
-	
-	public class ExportLine:ExportColumn,IExportGraphics,IAcceptor
+	public interface ICmdletLogger
 	{
-		public ExportLine()
-		{
-		}
-		
-		
-		public void Accept(IVisitor visitor)
-		{
-			visitor.Visit(this);
-		}
-		
-		
-		public override ICSharpCode.Reporting.Arrange.IMeasurementStrategy MeasurementStrategy()
-		{
-			throw new NotImplementedException();
-		}
-		
-		public int Thickness {get;set;}
-		
-		public DashStyle DashStyle {get;set;}
-		
-		public LineCap StartLineCap {get;set;}
-		
-		public LineCap EndLineCap {get;set;}
-		
-		public Point FromPoint {get;set;}
-		
-		public Point ToPoint {get;set;}
+		void WriteError(ErrorRecord error);
+		void WriteLine(string message);
+		void WriteVerbose(string message);
+		void WriteWarning(string message);
 	}
 }
