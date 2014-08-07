@@ -287,6 +287,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 		/// </summary>
 		public object Instance {
 			get { return instance; }
+			internal set { instance = value; }
 		}
 
 		/// <summary>

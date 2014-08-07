@@ -122,7 +122,7 @@ namespace ICSharpCode.WpfDesign
 		DesignItem GetDesignItem(object component);
 		
 		/// <summary>Registers a component for usage in the designer.</summary>
-		DesignItem RegisterComponentForDesigner(object component);
+		DesignItem RegisterComponentForDesigner(object component, Type basetype=null);
 		
 		/// <summary>Event raised whenever a component is registered</summary>
 		event EventHandler<DesignItemEventArgs> ComponentRegistered;

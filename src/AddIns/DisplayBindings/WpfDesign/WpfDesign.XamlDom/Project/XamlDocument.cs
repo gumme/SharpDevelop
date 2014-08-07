@@ -158,9 +158,14 @@ namespace ICSharpCode.WpfDesign.XamlDom
 		/// <summary>
 		/// Create an XamlObject from the instance.
 		/// </summary>
-		public XamlObject CreateObject(object instance)
+		public XamlObject CreateObject(object instance, object baseobject=null)
 		{
-			return (XamlObject)CreatePropertyValue(instance, null);
+			object obj = instance;
+			if (baseobject != null && instance.GetType() != baseobject.GetType())
+				obj = baseobject;
+			XamlObject xamlobj = (XamlObject)CreatePropertyValue(obj, null);
+			xamlobj.Instance = instance;
+			return xamlobj;
 		}
 		
 		/// <summary>
@@ -193,7 +198,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 			
 			XmlElement xml = _xmlDoc.CreateElement(prefix, elementType.Name, ns);
 
-			if (hasStringConverter && XamlObject.GetContentPropertyName(elementType) != null) {
+			if (hasStringConverter && (XamlObject.GetContentPropertyName(elementType) != null || IsNativeType(instance))) {
 				xml.InnerText = c.ConvertToInvariantString(instance);
 			} else if (instance is Brush && forProperty != null) {  // TODO: this is a hacky fix, because Brush Editor doesn't
 										     // edit Design Items and so we have no XML, only the Brush 
@@ -214,8 +219,6 @@ namespace ICSharpCode.WpfDesign.XamlDom
 						}
 					}
 				}
-			} else if (instance is string) {
-				xml.InnerText = (string)instance;
 			}
 
 			return new XamlObject(this, xml, elementType, instance);
@@ -273,6 +276,11 @@ namespace ICSharpCode.WpfDesign.XamlDom
 			}
 
 			return prefix;
+		}
+		
+		bool IsNativeType(object instance)
+		{
+			return instance.GetType().Assembly == typeof(String).Assembly;
 		}
 	}
 }

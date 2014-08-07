@@ -20,6 +20,7 @@ using System.Windows;
 using System;
 using System.Diagnostics;
 using System.Windows.Input;
+using System.Windows.Controls;
 using ICSharpCode.WpfDesign.Adorners;
 using ICSharpCode.WpfDesign.Designer.Controls;
 
@@ -151,15 +152,31 @@ namespace ICSharpCode.WpfDesign.Designer.Services
 		protected virtual DesignItem CreateItem(DesignContext context)
 		{
 			object newInstance = context.Services.ExtensionManager.CreateInstanceWithCustomInstanceFactory(componentType, null);
-			DesignItem item = context.Services.Component.RegisterComponentForDesigner(newInstance);
+			DesignItem item = context.Services.Component.RegisterComponentForDesigner(newInstance, componentType);
 			changeGroup = item.OpenGroup("Drop Control");
 			context.Services.ExtensionManager.ApplyDefaultInitializers(item);
 			return item;
 		}
 		
+		public static bool AddItemWithCustomSizePosition(DesignItem container, Type createdItem, Size size, Point position)
+		{
+			CreateComponentTool cct = new CreateComponentTool(createdItem);
+			return AddItemWithCustomSize(container, cct.CreateItem(container.Context), position, size);
+		} 
+		
+		public static bool AddItemWithDefaultSize(DesignItem container, Type createdItem, Size size)
+		{
+			CreateComponentTool cct = new CreateComponentTool(createdItem);
+			return AddItemWithCustomSize(container, cct.CreateItem(container.Context), new Point(0, 0), size);
+		}
+
 		internal static bool AddItemWithDefaultSize(DesignItem container, DesignItem createdItem, Point position)
 		{
-			var size = ModelTools.GetDefaultSize(createdItem);
+			return AddItemWithCustomSize(container, createdItem, position, ModelTools.GetDefaultSize(createdItem));
+		}
+
+		internal static bool AddItemWithCustomSize(DesignItem container, DesignItem createdItem, Point position, Size size)
+		{
 			PlacementOperation operation = PlacementOperation.TryStartInsertNewComponents(
 				container,
 				new DesignItem[] { createdItem },

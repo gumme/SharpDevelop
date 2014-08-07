@@ -48,7 +48,18 @@ namespace ICSharpCode.WpfDesign.Extensions
 		/// <summary>
 		/// Creates an instance of the specified type, passing the specified arguments to its constructor.
 		/// </summary>
+		/// <param name="type"></param>
+		/// <param name="arguments"></param>
+		/// <returns></returns>
 		public virtual object CreateInstance(Type type, params object[] arguments)
+		{
+			return CreateObjectInstance(type, arguments);
+		}
+
+		/// <summary>
+		/// Creates an instance of the specified type, passing the specified arguments to its constructor.
+		/// </summary>
+		public static object CreateObjectInstance(Type type, params object[] arguments)
 		{
 			var instance = Activator.CreateInstance(type, arguments);
 			var uiElement = instance as UIElement;

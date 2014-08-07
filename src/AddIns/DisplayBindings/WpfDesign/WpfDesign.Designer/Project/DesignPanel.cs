@@ -64,14 +64,14 @@ namespace ICSharpCode.WpfDesign.Designer
 		HitTestFilterBehavior FilterHitTestInvisibleElements(DependencyObject potentialHitTestTarget)
 		{
 			UIElement element = potentialHitTestTarget as UIElement;
-						
+			
 			if (element != null) {
 				if (!(element.IsHitTestVisible && element.Visibility == Visibility.Visible)) {
 					return HitTestFilterBehavior.ContinueSkipSelfAndChildren;
 				}
 				
 				var designItem = Context.Services.Component.GetDesignItem(element) as XamlDesignItem;
-			
+				
 				if (designItem != null && designItem.IsDesignTimeLocked) {
 					return HitTestFilterBehavior.ContinueSkipSelfAndChildren;
 				}			
@@ -109,14 +109,17 @@ namespace ICSharpCode.WpfDesign.Designer
 				return;
 			}
 			// First try hit-testing on the adorner layer.
-			
+
 			bool continueHitTest = true;
-			
+
+			HitTestFilterCallback filterBehavior = CustomHitTestFilterBehavior ?? FilterHitTestInvisibleElements;
+			CustomHitTestFilterBehavior = null;
 			hitTestElements.Clear();
 			
 			if (testAdorners) {
+
 				RunHitTest(
-					_adornerLayer, mousePosition, FilterHitTestInvisibleElements,
+					_adornerLayer, mousePosition, filterBehavior,
 					delegate(HitTestResult result) {
 						if (result != null && result.VisualHit != null && result.VisualHit is Visual) {
 							DesignPanelHitTestResult customResult = new DesignPanelHitTestResult((Visual)result.VisualHit);
@@ -138,11 +141,11 @@ namespace ICSharpCode.WpfDesign.Designer
 			
 			if (continueHitTest && testDesignSurface) {
 				RunHitTest(
-					this.Child, mousePosition, FilterHitTestInvisibleElements,
+					this.Child, mousePosition, filterBehavior,
 					delegate(HitTestResult result) {
 						if (result != null && result.VisualHit != null && result.VisualHit is Visual) {
 							DesignPanelHitTestResult customResult = new DesignPanelHitTestResult((Visual)result.VisualHit);
-							
+
 							ViewService viewService = _context.Services.View;
 							DependencyObject obj = result.VisualHit;
 							
@@ -210,6 +213,8 @@ namespace ICSharpCode.WpfDesign.Designer
 		
 		#region Properties
 		
+		//Set custom HitTestFilterCallbak
+		public HitTestFilterCallback CustomHitTestFilterBehavior { get; set; }
 		/// <summary>
 		/// Gets/Sets the design context.
 		/// </summary>
