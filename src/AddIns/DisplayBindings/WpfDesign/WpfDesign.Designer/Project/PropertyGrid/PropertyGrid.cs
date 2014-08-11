@@ -35,19 +35,7 @@ using System.Windows;
 
 namespace ICSharpCode.WpfDesign.Designer.PropertyGrid
 {
-	public interface IPropertyGrid
-    {
-        IEnumerable<DesignItem> SelectedItems { get; set; }
-        Dictionary<MemberDescriptor, PropertyNode> NodeFromDescriptor { get; }
-        DesignItem SingleItem { get; }
-        string Name { get; set; }
-        string OldName { get; }
-        bool IsNameCorrect { get; set; }
-        bool ReloadActive { get; }
-        event EventHandler AggregatePropertiesUpdated;
-        event PropertyChangedEventHandler PropertyChanged;
-    }
-	public class PropertyGrid : INotifyPropertyChanged, IPropertyGrid
+	public class PropertyGrid : INotifyPropertyChanged
 	{
 		public PropertyGrid()
 		{
@@ -67,13 +55,9 @@ namespace ICSharpCode.WpfDesign.Designer.PropertyGrid
 
 		Dictionary<MemberDescriptor, PropertyNode> nodeFromDescriptor = new Dictionary<MemberDescriptor, PropertyNode>();
 
-		public Dictionary<MemberDescriptor, PropertyNode> NodeFromDescriptor { get { return nodeFromDescriptor; } }
-		
 		public CategoriesCollection Categories { get; private set; }
 		public PropertyNodeCollection Events { get; private set; }
 
-		public event EventHandler AggregatePropertiesUpdated;
-		
 		private PropertyGridGroupMode _groupMode;
 		
 		public PropertyGridGroupMode GroupMode
@@ -229,15 +213,13 @@ namespace ICSharpCode.WpfDesign.Designer.PropertyGrid
 				
 				if (selectedItems == null || selectedItems.Count == 0) return;
 				if (selectedItems.Count == 1) SingleItem = selectedItems[0];
-				
+	
 				foreach (var md in GetDescriptors()) {
 					if (PassesFilter(md.Name))
 						AddNode(md);
 				}
 			} finally {
 				reloadActive = false;
-				if (AggregatePropertiesUpdated != null)
-					AggregatePropertiesUpdated(this, EventArgs.Empty);
 			}
 		}
 

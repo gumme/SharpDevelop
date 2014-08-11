@@ -28,30 +28,30 @@ namespace ICSharpCode.WpfDesign.Designer.OutlineView
 		protected override bool CanInsert(DragTreeViewItem target, DragTreeViewItem[] items, DragTreeViewItem after, bool copy)
 		{
 			UpdateCustomNodes(items);
-			return (target.DataContext as IOutlineNode).CanInsert(_customOutlineNodes,
-			                                                     after == null ? null : after.DataContext as IOutlineNode, copy);
+			return (target.DataContext as OutlineNode).CanInsert(_customOutlineNodes,
+			                                                     after == null ? null : after.DataContext as OutlineNode, copy);
 		}
 
 		protected override void Insert(DragTreeViewItem target, DragTreeViewItem[] items, DragTreeViewItem after, bool copy)
 		{
 			UpdateCustomNodes(items);
-			(target.DataContext as IOutlineNode).Insert(_customOutlineNodes,
-			                                           after == null ? null : after.DataContext as IOutlineNode, copy);
+			(target.DataContext as OutlineNode).Insert(_customOutlineNodes,
+			                                           after == null ? null : after.DataContext as OutlineNode, copy);
 		}
 		
 		// Need to do this through a seperate List since previously LINQ queries apparently disconnected DataContext;bug in .NET 4.0
-		private List<IOutlineNode> _customOutlineNodes;
+		private List<OutlineNode> _customOutlineNodes;
 
 		void UpdateCustomNodes(IEnumerable<DragTreeViewItem> items)
 		{
-			_customOutlineNodes = new List<IOutlineNode>();
+			_customOutlineNodes = new List<OutlineNode>();
 			foreach (var item in items)
-				_customOutlineNodes.Add(item.DataContext as IOutlineNode);
+				_customOutlineNodes.Add(item.DataContext as OutlineNode);
 		}
 		
 		public override bool ShouldItemBeVisible(DragTreeViewItem dragTreeViewitem)
 		{
-			var node = dragTreeViewitem.DataContext as IOutlineNode;
+			var node = dragTreeViewitem.DataContext as OutlineNode;
 			
 			return string.IsNullOrEmpty(Filter) || node.Name.ToLower().Contains(Filter.ToLower());
 		}
@@ -60,7 +60,7 @@ namespace ICSharpCode.WpfDesign.Designer.OutlineView
 		{
 			base.SelectOnly(item);
 			
-			var node = item.DataContext as IOutlineNode;
+			var node = item.DataContext as OutlineNode;
 			
 			var surface = node.DesignItem.View.TryFindParent<DesignSurface>();
 			if (surface != null)

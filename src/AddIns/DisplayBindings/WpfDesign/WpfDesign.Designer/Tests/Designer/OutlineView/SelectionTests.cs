@@ -26,7 +26,7 @@ namespace ICSharpCode.WpfDesign.Tests.Designer.OutlineView
 	public class SelectionTests : ModelTestHelper
 	{
 		private DesignItem _grid;
-		private IOutlineNode _outline;
+		private OutlineNode _outline;
 
 		[SetUp]
 		public void Intialize()

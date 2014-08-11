@@ -26,7 +26,7 @@ namespace ICSharpCode.WpfDesign.Tests.Designer.OutlineView
 	public class HierarchyTests : ModelTestHelper
 	{
 		private DesignItem _grid;
-		private IOutlineNode _outline;
+		private OutlineNode _outline;
 
 		[TestFixtureSetUp]
 		public void Intialize()

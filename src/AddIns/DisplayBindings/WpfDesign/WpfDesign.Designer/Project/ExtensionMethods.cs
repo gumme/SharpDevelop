@@ -31,19 +31,6 @@ namespace ICSharpCode.WpfDesign.Designer
 {
 	public static class ExtensionMethods
 	{
-		
-		public static bool AnyIsInNamespace(this Type type, string namespacestr)
-        {
-            Type t = type;
-            while (t!=null)
-            {
-                if (t.Namespace.Equals(namespacestr))
-                    return true;
-                t = t.BaseType;
-            }
-            return false;
-        }
-		
 		public static double Coerce(this double value, double min, double max)
 		{
 			return Math.Max(Math.Min(value, max), min);

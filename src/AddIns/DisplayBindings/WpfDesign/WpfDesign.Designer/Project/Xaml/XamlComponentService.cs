@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Windows.Markup;
 using System.Windows;
-using ICSharpCode.WpfDesign.Extensions;
+
 using ICSharpCode.WpfDesign.XamlDom;
 
 namespace ICSharpCode.WpfDesign.Designer.Xaml
@@ -68,18 +68,15 @@ namespace ICSharpCode.WpfDesign.Designer.Xaml
 			return site;
 		}
 		
-		public DesignItem RegisterComponentForDesigner(object component, Type basetype = null)
+		public DesignItem RegisterComponentForDesigner(object component)
 		{
 			if (component == null) {
 				component = new NullExtension();
 			} else if (component is Type) {
 				component = new TypeExtension((Type)component);
 			}
-
-			object baseobject = basetype != null && component.GetType()!=basetype ? CustomInstanceFactory.CreateObjectInstance(basetype, null) : null;
-			XamlObject xamlobj = _context.Document.CreateObject(component, baseobject);
-
-			XamlDesignItem item = new XamlDesignItem(xamlobj, _context);
+			
+			XamlDesignItem item = new XamlDesignItem(_context.Document.CreateObject(component), _context);
 			_sites.Add(component, item);
 			if (ComponentRegistered != null) {
 				ComponentRegistered(this, new DesignItemEventArgs(item));
