@@ -60,7 +60,7 @@ namespace ICSharpCode.WpfDesign.Designer
 		void RunHitTest(Visual reference, Point point, HitTestFilterCallback filterCallback, HitTestResultCallback resultCallback)
 		{
 			VisualTreeHelper.HitTest(reference, filterCallback, resultCallback,
-				new PointHitTestParameters(point));
+			                         new PointHitTestParameters(point));
 		}
 		
 		HitTestFilterBehavior FilterHitTestInvisibleElements(DependencyObject potentialHitTestTarget)
@@ -76,11 +76,11 @@ namespace ICSharpCode.WpfDesign.Designer
 				
 				if (designItem != null && designItem.IsDesignTimeLocked) {
 					return HitTestFilterBehavior.ContinueSkipSelfAndChildren;
-				}			
+				}
 			}
 			
 			hitTestElements.Add(element);
-						
+			
 			return HitTestFilterBehavior.Continue;
 		}
 		
@@ -93,10 +93,10 @@ namespace ICSharpCode.WpfDesign.Designer
 			
 			DesignPanelHitTestResult result = DesignPanelHitTestResult.NoHit;
 			HitTest(mousePosition, testAdorners, testDesignSurface,
-				delegate(DesignPanelHitTestResult r) {
-					result = r;
-					return false;
-				}, hitTestType);
+			        delegate(DesignPanelHitTestResult r) {
+			        	result = r;
+			        	return false;
+			        }, hitTestType);
 			
 			return result;
 		}
@@ -154,8 +154,8 @@ namespace ICSharpCode.WpfDesign.Designer
 							if (hitTestType == HitTestType.ElementSelection)
 							{
 								if (Keyboard.IsKeyDown(Key.LeftAlt))
-								if (lastElement != null && lastElement != _context.RootItem.Component &&
-									hitTestElements.Contains(lastElement))
+									if (lastElement != null && lastElement != _context.RootItem.Component &&
+									    hitTestElements.Contains(lastElement))
 								{
 									var idx = hitTestElements.IndexOf(lastElement) - 1;
 									if (idx >= 0)
@@ -416,54 +416,63 @@ namespace ICSharpCode.WpfDesign.Designer
 				e.Handled = true;
 				
 				if (placementOp == null) {
-                    List<DesignItem> placedItems = Context.Services.Selection.SelectedItems.Where(x => x.Extensions.All(InvokeDefaultKeyDownAction)).ToList();
-                    
-                    if (placedItems.Count < 1) return;
-                    
+					List<DesignItem> placedItems = Context.Services.Selection.SelectedItems.Where(x => x.Extensions.All(InvokeDefaultKeyDownAction)).ToList();
+					
+					if (placedItems.Count < 1) return;
+					
 					dx = 0;
 					dy = 0;
-                    placementOp = PlacementOperation.Start(placedItems, PlacementType.Move);
-				}
-				
-				switch (e.Key) {
-					case Key.Left:
-						dx += Keyboard.IsKeyDown(Key.LeftShift) ? -10 : -1;
-						break;
-					case Key.Up:
-						dy += Keyboard.IsKeyDown(Key.LeftShift) ? -10 : -1;
-						break;
-					case Key.Right:
-						dx += Keyboard.IsKeyDown(Key.LeftShift) ? 10 : 1;
-						break;
-					case Key.Down:
-						dy += Keyboard.IsKeyDown(Key.LeftShift) ? 10 : 1;
-						break;
-				}
-				
-				foreach (PlacementInformation info in placementOp.PlacedItems)
-				{
-					var bounds = info.OriginalBounds;
 					
-					if (!Keyboard.IsKeyDown(Key.LeftCtrl)) {
-						info.Bounds = new Rect(bounds.Left + dx,
-							bounds.Top + dy,
-							bounds.Width,
-							bounds.Height);
-					} else {
-						info.Bounds = new Rect(bounds.Left,
-							bounds.Top,
-							bounds.Width + dx,
-							bounds.Height + dy);
+					try
+					{
+						placementOp = PlacementOperation.Start(placedItems, PlacementType.Move);
 					}
-					placementOp.CurrentContainerBehavior.SetPosition(info);
+					catch
+					{
+						MessageBox.Show("Operationen kan inte utföras på de objekt du valt.");
+					}
+				}
+				
+				if(placementOp!=null) {
+					switch (e.Key) {
+						case Key.Left:
+							dx += Keyboard.IsKeyDown(Key.LeftShift) ? -10 : -1;
+							break;
+						case Key.Up:
+							dy += Keyboard.IsKeyDown(Key.LeftShift) ? -10 : -1;
+							break;
+						case Key.Right:
+							dx += Keyboard.IsKeyDown(Key.LeftShift) ? 10 : 1;
+							break;
+						case Key.Down:
+							dy += Keyboard.IsKeyDown(Key.LeftShift) ? 10 : 1;
+							break;
+					}
+					
+					foreach (PlacementInformation info in placementOp.PlacedItems) {
+						var bounds = info.OriginalBounds;
+						
+						if (!Keyboard.IsKeyDown(Key.LeftCtrl)) {
+							info.Bounds = new Rect(bounds.Left + dx,
+							                       bounds.Top + dy,
+							                       bounds.Width,
+							                       bounds.Height);
+						} else {
+							info.Bounds = new Rect(bounds.Left,
+							                       bounds.Top,
+							                       bounds.Width + dx,
+							                       bounds.Height + dy);
+						}
+						placementOp.CurrentContainerBehavior.SetPosition(info);
+					}
 				}
 			}
 		}
 		
 		static bool IsPropertySet(UIElement element, DependencyProperty d)
-        {
-            return element.ReadLocalValue(d) != DependencyProperty.UnsetValue;
-        }
+		{
+			return element.ReadLocalValue(d) != DependencyProperty.UnsetValue;
+		}
 		
 		protected override void OnQueryCursor(QueryCursorEventArgs e)
 		{
