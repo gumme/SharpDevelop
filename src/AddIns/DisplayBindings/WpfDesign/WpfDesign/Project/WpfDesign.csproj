@@ -76,6 +76,7 @@
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="HitTestType.cs" />
     <Compile Include="Metadata.cs" />
+    <Compile Include="ObjectDeletedException.cs" />
     <Compile Include="PlacementInformation.cs" />
     <Compile Include="PlacementBehavior.cs" />
     <Compile Include="MouseInteraction.cs" />
