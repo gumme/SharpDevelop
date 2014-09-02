@@ -146,9 +146,23 @@ namespace ICSharpCode.WpfDesign.Adorners
 		/// <summary/>
 		protected override Size ArrangeOverride(Size finalSize)
 		{
+			List<UIElement> objectsMarkedForDeletion = new List<UIElement>();
 			foreach (UIElement element in base.InternalChildren) {
-				GetPlacement(element).Arrange(this, element, finalSize);
+			    try
+			    {
+                    GetPlacement(element).Arrange(this, element, finalSize);
+			    }
+			    catch (ObjectDeletedException exc)
+			    {
+                    objectsMarkedForDeletion.Add(element);
+			    }
+				
 			}
+
+		    foreach (UIElement el in objectsMarkedForDeletion) {
+		        InternalChildren.Remove(el);
+		    }
+			
 			return finalSize;
 		}
 	}
