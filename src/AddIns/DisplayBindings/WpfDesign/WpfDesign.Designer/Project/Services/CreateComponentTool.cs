@@ -26,6 +26,7 @@ using ICSharpCode.WpfDesign.Designer.Controls;
 
 namespace ICSharpCode.WpfDesign.Designer.Services
 {
+	public delegate void DesignItemCreatedDelegate(DesignItem di);
 	/// <summary>
 	/// A tool that creates a component.
 	/// </summary>
@@ -35,6 +36,7 @@ namespace ICSharpCode.WpfDesign.Designer.Services
 		MoveLogic moveLogic;
 		ChangeGroup changeGroup;
 		Point createPoint;
+		public DesignItemCreatedDelegate DesignItemCreated;
 		
 		/// <summary>
 		/// Creates a new CreateComponentTool instance.
@@ -155,6 +157,8 @@ namespace ICSharpCode.WpfDesign.Designer.Services
 			DesignItem item = context.Services.Component.RegisterComponentForDesigner(newInstance, componentType);
 			changeGroup = item.OpenGroup("Drop Control");
 			context.Services.ExtensionManager.ApplyDefaultInitializers(item);
+			if (DesignItemCreated != null)
+		        DesignItemCreated(item);
 			return item;
 		}
 		
