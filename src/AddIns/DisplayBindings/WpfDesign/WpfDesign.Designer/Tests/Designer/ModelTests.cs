@@ -668,6 +668,29 @@ namespace ICSharpCode.WpfDesign.Tests.Designer
 		}
 		
 		[Test]
+		public void StaticResourceWithApplicationResource()
+		{
+			string resourceValue = "Hello world";
+			string resourceKey = "TestResource";
+			Application.Current.Resources[resourceKey] = resourceValue;
+			
+			DesignItem button = CreateCanvasContext("<Button/>");
+			DesignItem canvas = button.Parent;
+			
+			DesignItemProperty prop = button.Properties.GetProperty("Content");
+			
+			prop.SetValue(new StaticResourceExtension());
+			prop.Value.Properties["ResourceKey"].SetValue(resourceKey);
+			
+			string expectedXaml = "<Button Content=\"{StaticResource " + resourceKey + "}\"/>";
+			
+			AssertCanvasDesignerOutput(expectedXaml, button.Context);
+			AssertLog("");
+			
+			Assert.AreEqual((string)prop.ValueOnInstance, resourceValue);
+		}
+		
+		[Test]
 		public void AddBrushAsResource()
 		{
 			DesignItem checkBox = CreateCanvasContext("<CheckBox/>");
