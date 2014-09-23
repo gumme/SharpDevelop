@@ -36,17 +36,18 @@ using System.Windows;
 namespace ICSharpCode.WpfDesign.Designer.PropertyGrid
 {
 	public interface IPropertyGrid
-    {
-        IEnumerable<DesignItem> SelectedItems { get; set; }
-        Dictionary<MemberDescriptor, PropertyNode> NodeFromDescriptor { get; }
-        DesignItem SingleItem { get; }
-        string Name { get; set; }
-        string OldName { get; }
-        bool IsNameCorrect { get; set; }
-        bool ReloadActive { get; }
-        event EventHandler AggregatePropertiesUpdated;
-        event PropertyChangedEventHandler PropertyChanged;
-    }
+	{
+		IEnumerable<DesignItem> SelectedItems { get; set; }
+		Dictionary<MemberDescriptor, PropertyNode> NodeFromDescriptor { get; }
+		DesignItem SingleItem { get; }
+		string Name { get; set; }
+		string OldName { get; }
+		bool IsNameCorrect { get; set; }
+		bool ReloadActive { get; }
+		event EventHandler AggregatePropertiesUpdated;
+		event PropertyChangedEventHandler PropertyChanged;
+	}
+	
 	public class PropertyGrid : INotifyPropertyChanged, IPropertyGrid
 	{
 		public PropertyGrid()
@@ -66,14 +67,11 @@ namespace ICSharpCode.WpfDesign.Designer.PropertyGrid
 		Category attachedCategory = new Category("Attached");
 
 		Dictionary<MemberDescriptor, PropertyNode> nodeFromDescriptor = new Dictionary<MemberDescriptor, PropertyNode>();
-
 		public Dictionary<MemberDescriptor, PropertyNode> NodeFromDescriptor { get { return nodeFromDescriptor; } }
-		
+		public event EventHandler AggregatePropertiesUpdated;
 		public CategoriesCollection Categories { get; private set; }
 		public PropertyNodeCollection Events { get; private set; }
 
-		public event EventHandler AggregatePropertiesUpdated;
-		
 		private PropertyGridGroupMode _groupMode;
 		
 		public PropertyGridGroupMode GroupMode

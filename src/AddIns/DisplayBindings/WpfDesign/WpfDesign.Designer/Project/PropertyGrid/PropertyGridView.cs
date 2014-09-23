@@ -51,7 +51,7 @@ namespace ICSharpCode.WpfDesign.Designer.PropertyGrid
 			PropertyGrid = pg??new PropertyGrid();
 			DataContext = PropertyGrid;
 		}
-
+		
 		private Thumb thumb;
 		public override void OnApplyTemplate()
 		{
