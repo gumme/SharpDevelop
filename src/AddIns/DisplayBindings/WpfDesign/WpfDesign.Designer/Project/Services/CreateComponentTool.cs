@@ -127,8 +127,6 @@ namespace ICSharpCode.WpfDesign.Designer.Services
 					moveLogic = null;
 					changeGroup.Commit();
 
-					// Return allowed effects to drag source to signal that the drop was successful.
-					e.Effects = e.Effects;
 					e.Handled = true;
 				}
 			} catch (Exception x) {
