@@ -428,6 +428,13 @@ namespace ICSharpCode.WpfDesign.Designer
 			{
 				e.Handled = true;
 				
+				PlacementType placementType = Keyboard.IsKeyDown(Key.LeftCtrl) ? PlacementType.Resize : PlacementType.Move;
+				
+				if (placementOp != null && placementOp.Type != placementType) {
+					placementOp.Commit();
+					placementOp = null;
+				}
+				
 				if (placementOp == null) {
 					List<DesignItem> placedItems = Context.Services.Selection.SelectedItems.Where(x => x.Extensions.All(InvokeDefaultKeyDownAction)).ToList();
 					
@@ -438,7 +445,7 @@ namespace ICSharpCode.WpfDesign.Designer
 					
 					try
 					{
-						placementOp = PlacementOperation.Start(placedItems, PlacementType.Move);
+						placementOp = PlacementOperation.Start(placedItems, placementType);
 					}
 					catch
 					{
@@ -465,12 +472,12 @@ namespace ICSharpCode.WpfDesign.Designer
 					foreach (PlacementInformation info in placementOp.PlacedItems) {
 						var bounds = info.OriginalBounds;
 						
-						if (!Keyboard.IsKeyDown(Key.LeftCtrl)) {
+						if (placementType == PlacementType.Move) {
 							info.Bounds = new Rect(bounds.Left + dx,
 							                       bounds.Top + dy,
 							                       bounds.Width,
 							                       bounds.Height);
-						} else {
+						} else if (placementType == PlacementType.Resize) {
 							if (bounds.Width + dx >= 0 && bounds.Height + dy >= 0)  {
 								info.Bounds = new Rect(bounds.Left,
 								                       bounds.Top,
