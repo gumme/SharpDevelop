@@ -17,38 +17,36 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Linq;
 using System.Windows;
-using System.Windows.Media;
-using System.Windows.Shapes;
-
-using ICSharpCode.WpfDesign.Adorners;
-using ICSharpCode.WpfDesign.Extensions;
-using ICSharpCode.WpfDesign.Designer;
+using ICSharpCode.WpfDesign.Designer.PropertyGrid.Editors.FormatedTextEditor;
+using ICSharpCode.WpfDesign.Designer.UIExtensions;
 
 namespace ICSharpCode.WpfDesign.Designer.Extensions
 {
-	/// <summary>
-	/// 
-	/// </summary>
-	[ExtensionServer(typeof(MultipleSelectedExtensionServer))]
-	[ExtensionFor(typeof(UIElement))]
-	public class RightClickMultipleItemsContextMenuExtension : SelectionAdornerProvider
+	public partial class TextBlockRightClickContextMenu
 	{
-		DesignPanel panel;
-		
-		protected override void OnInitialized()
+		private DesignItem designItem;
+
+		public TextBlockRightClickContextMenu(DesignItem designItem)
 		{
-			base.OnInitialized();
+			this.designItem = designItem;
 			
-			panel = ExtendedItem.Context.Services.DesignPanel as DesignPanel;
-			panel.ContextMenu = new RightClickMultipleItemsContextMenu(ExtendedItem);
+			InitializeComponent();
 		}
-		
-		protected override void OnRemove()
+
+		void Click_EditFormatedText(object sender, RoutedEventArgs e)
 		{
-			panel.ContextMenu = null;
-			
-			base.OnRemove();
+			var dlg = new Window()
+			{
+				Content = new FormatedTextEditor(designItem),
+				Width = 440,
+				Height = 200,
+				WindowStyle = WindowStyle.ToolWindow,
+				Owner = ((DesignPanel) designItem.Context.Services.DesignPanel).TryFindParent<Window>(),
+			};
+
+			dlg.ShowDialog();
 		}
 	}
 }

@@ -17,11 +17,15 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -100,7 +104,7 @@ namespace ICSharpCode.WpfDesign.Designer
 			
 			return result;
 		}
-		
+
 		/// <summary>
 		/// Performs a hit test on the design surface, raising <paramref name="callback"/> for each match.
 		/// Hit testing continues while the callback returns true.
@@ -117,7 +121,7 @@ namespace ICSharpCode.WpfDesign.Designer
 			HitTestFilterCallback filterBehavior = CustomHitTestFilterBehavior ?? FilterHitTestInvisibleElements;
 			CustomHitTestFilterBehavior = null;
 			hitTestElements.Clear();
-			
+
 			if (testAdorners) {
 
 				RunHitTest(
@@ -217,6 +221,15 @@ namespace ICSharpCode.WpfDesign.Designer
 		
 		//Set custom HitTestFilterCallbak
 		public HitTestFilterCallback CustomHitTestFilterBehavior { get; set; }
+
+		public AdornerLayer AdornerLayer
+		{
+			get
+			{
+				return _adornerLayer;
+			}
+		}
+
 		/// <summary>
 		/// Gets/Sets the design context.
 		/// </summary>
@@ -458,10 +471,12 @@ namespace ICSharpCode.WpfDesign.Designer
 							                       bounds.Width,
 							                       bounds.Height);
 						} else {
-							info.Bounds = new Rect(bounds.Left,
-							                       bounds.Top,
-							                       bounds.Width + dx,
-							                       bounds.Height + dy);
+							if (bounds.Width + dx >= 0 && bounds.Height + dy >= 0)  {
+								info.Bounds = new Rect(bounds.Left,
+								                       bounds.Top,
+								                       bounds.Width + dx,
+								                       bounds.Height + dy);
+							}
 						}
 						placementOp.CurrentContainerBehavior.SetPosition(info);
 					}
@@ -492,5 +507,54 @@ namespace ICSharpCode.WpfDesign.Designer
 			PropertyChangedEventHandler handler = PropertyChanged;
 			if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
 		}
+
+		#region ContextMenu
+
+		private Dictionary<ContextMenu, Tuple<int,List<object>>> contextMenusAndEntries = new Dictionary<ContextMenu, Tuple<int,List<object>>>();
+
+		public void AddContextMenu(ContextMenu contextMenu)
+		{
+			contextMenusAndEntries.Add(contextMenu, new Tuple<int, List<object>>(contextMenusAndEntries.Count, new List<object>(contextMenu.Items.Cast<object>())));
+			contextMenu.Items.Clear();
+
+			UpdateContextMenu();
+		}
+
+		public void RemoveContextMenu(ContextMenu contextMenu)
+		{
+			contextMenusAndEntries.Remove(contextMenu);
+			
+			UpdateContextMenu();
+		}
+
+		public void ClearContextMenu()
+		{
+			contextMenusAndEntries.Clear();
+			ContextMenu = null;
+		}
+
+		private void UpdateContextMenu()
+		{
+			if (contextMenusAndEntries.Count == 0)
+				this.ContextMenu = null;
+
+			if (this.ContextMenu == null)
+				this.ContextMenu = new ContextMenu();
+			
+			this.ContextMenu.Items.Clear();
+
+			foreach (var entries in contextMenusAndEntries.Values.OrderBy(x => x.Item1).Select(x => x.Item2))
+			{
+				if (this.ContextMenu.Items.Count > 0)
+					this.ContextMenu.Items.Add(new Separator());
+
+				foreach (var entry in entries)
+				{
+					ContextMenu.Items.Add(entry);
+				}
+			}
+		}
+
+		#endregion
 	}
 }

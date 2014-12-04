@@ -18,41 +18,45 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using ICSharpCode.WpfDesign.PropertyGrid;
-using ICSharpCode.WpfDesign.Designer.Xaml;
+using System.Windows.Markup;
+using System.Xml;
+using System.Xml.XPath;
 
-namespace ICSharpCode.WpfDesign.Designer.Extensions
+namespace ICSharpCode.WpfDesign.XamlDom
 {
-	public partial class RightClickMultipleItemsContextMenu
+	public static class TemplateHelper
 	{
-		private DesignItem designItem;
-		
-		public RightClickMultipleItemsContextMenu(DesignItem designItem)
+		public static FrameworkTemplate GetFrameworkTemplate(XmlElement xmlElement)
 		{
-			this.designItem = designItem;
+			var nav = xmlElement.CreateNavigator();
+
+			var ns = new Dictionary<string, string>();
+			while (true)
+			{
+				var nsInScope = nav.GetNamespacesInScope(XmlNamespaceScope.ExcludeXml);
+				foreach (var ak in nsInScope)
+				{
+					if (!ns.ContainsKey(ak.Key) && ak.Key != "")
+						ns.Add(ak.Key, ak.Value);
+				}
+				if (!nav.MoveToParent())
+					break;
+			}
+
+			foreach (var dictentry in ns)
+			{
+				xmlElement.SetAttribute("xmlns:" + dictentry.Key, dictentry.Value);
+			}
 			
-			InitializeComponent();
-		}
-		
-		void Click_WrapInCanvas(object sender, System.Windows.RoutedEventArgs e)
-		{
-			ModelTools.WrapItemsNewContainer(this.designItem.Services.Selection.SelectedItems, typeof(Canvas));
-		}
-		
-		void Click_WrapInGrid(object sender, System.Windows.RoutedEventArgs e)
-		{
-			ModelTools.WrapItemsNewContainer(this.designItem.Services.Selection.SelectedItems, typeof(Grid));
+			var xaml = xmlElement.OuterXml;
+			StringReader stringReader = new StringReader(xaml);
+			XmlReader xmlReader = XmlReader.Create(stringReader);
+			return (FrameworkTemplate)XamlReader.Load(xmlReader);
 		}
 	}
 }

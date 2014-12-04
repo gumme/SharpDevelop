@@ -20,6 +20,7 @@ using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Windows;
 using ICSharpCode.WpfDesign.XamlDom;
 using ICSharpCode.WpfDesign.Designer.Services;
 using System.Collections.Specialized;
@@ -107,7 +108,9 @@ namespace ICSharpCode.WpfDesign.Designer.Xaml
 		public IEnumerator<DesignItem> GetEnumerator()
 		{
 			foreach (XamlPropertyValue val in property.CollectionElements) {
-				yield return GetItem(val);
+				var item = GetItem(val);
+				if (item != null)
+					yield return item;
 			}
 		}
 		
@@ -121,7 +124,7 @@ namespace ICSharpCode.WpfDesign.Designer.Xaml
 			if (val is XamlObject) {
 				return context._componentService.GetDesignItem( ((XamlObject)val).Instance );
 			} else {
-				throw new NotImplementedException();
+				return null; //	throw new NotImplementedException();
 			}
 		}
 		
@@ -172,6 +175,8 @@ namespace ICSharpCode.WpfDesign.Designer.Xaml
 		
 		void RemoveInternal(int index, XamlDesignItem item)
 		{
+			NameScopeHelper.NameChanged(item.XamlObject, item.Name, null);
+
 			Debug.Assert(property.CollectionElements[index] == item.XamlObject);
 			property.CollectionElements.RemoveAt(index);
 			
@@ -185,6 +190,8 @@ namespace ICSharpCode.WpfDesign.Designer.Xaml
 			
 			if (CollectionChanged != null)
 				CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index));
+
+			NameScopeHelper.NameChanged(item.XamlObject, null, item.Name);
 		}
 		
 		sealed class InsertAction : ITransactionItem

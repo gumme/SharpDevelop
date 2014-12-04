@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Markup;
+using System.Xaml;
 
 namespace ICSharpCode.WpfDesign.XamlDom
 {
@@ -28,7 +29,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 	/// A service provider that provides the IProvideValueTarget and IXamlTypeResolver services.
 	/// No other services (e.g. from the document's service provider) are offered.
 	/// </summary>
-	public class XamlObjectServiceProvider : IServiceProvider, IProvideValueTarget
+	public class XamlObjectServiceProvider : IServiceProvider, IXamlNameResolver, IProvideValueTarget, IXamlSchemaContextProvider, IAmbientProvider
 	{
 		/// <summary>
 		/// Creates a new XamlObjectServiceProvider instance.
@@ -60,6 +61,21 @@ namespace ICSharpCode.WpfDesign.XamlDom
 			if (serviceType == typeof(IXamlTypeResolver)) {
 				return Resolver;
 			}
+			if (serviceType == typeof(XamlTypeResolverProvider))
+			{
+				return Resolver;
+			}
+			if (serviceType == typeof(IXamlSchemaContextProvider)) {
+				return this;
+			}
+			if (serviceType == typeof(IAmbientProvider)) {
+				return this;
+			}
+			if (serviceType == typeof(IXamlNameResolver))
+			{
+				return this;
+			}
+			
 			return null;
 		}
 
@@ -100,6 +116,127 @@ namespace ICSharpCode.WpfDesign.XamlDom
 				return parentProperty.DependencyProperty;
 			}
 		}
+
+		#endregion
+
+		#region IXamlSchemaContextProvider Members
+
+		private XamlSchemaContext iCsharpXamlSchemaContext;
+
+		//Maybe we new our own XamlSchemaContext?
+		//private class ICsharpXamlSchemaContext : XamlSchemaContext
+		//{
+		//    public override XamlType GetXamlType(Type type)
+		//    {
+		//        return base.GetXamlType(type);
+		//    }
+		//}
+
+		public XamlSchemaContext SchemaContext
+		{
+			get
+			{
+				return iCsharpXamlSchemaContext = iCsharpXamlSchemaContext ?? new XamlSchemaContext();
+			}
+		}
+
+		#endregion
+
+		#region IAmbientProvider Members
+
+		public AmbientPropertyValue GetFirstAmbientValue(IEnumerable<XamlType> ceilingTypes, params XamlMember[] properties)
+		{
+			return GetAllAmbientValues(ceilingTypes, properties).FirstOrDefault();
+		}
+
+		public object GetFirstAmbientValue(params XamlType[] types)
+		{
+			return null;
+		}
+
+		public IEnumerable<AmbientPropertyValue> GetAllAmbientValues(IEnumerable<XamlType> ceilingTypes, params XamlMember[] properties)
+		{
+			var obj = this.XamlObject.ParentObject;
+
+			while (obj != null)
+			{
+				if (ceilingTypes.Any(x => obj.SystemXamlTypeForProperty.CanAssignTo(x)))
+				{
+					foreach (var pr in obj.Properties)
+					{
+						if (properties.Any(x => x.Name == pr.PropertyName))
+						{
+							yield return new AmbientPropertyValue(pr.SystemXamlMemberForProperty, pr.ValueOnInstance);
+						}
+					}
+				}
+
+				obj = obj.ParentObject;
+			}
+		}
+
+		public IEnumerable<object> GetAllAmbientValues(params XamlType[] types)
+		{
+			return new List<object>();
+		}
+
+		public IEnumerable<AmbientPropertyValue> GetAllAmbientValues(IEnumerable<XamlType> ceilingTypes, bool searchLiveStackOnly, IEnumerable<XamlType> types, params XamlMember[] properties)
+		{
+			return new List<AmbientPropertyValue>();
+		}
+
+		#endregion
+
+		#region IXamlNameResolver
+
+		public object Resolve(string name)
+		{
+			INameScope ns = null;
+			var xamlObj = this.XamlObject;
+			while (xamlObj != null)
+			{
+				ns = NameScopeHelper.GetNameScopeFromObject(xamlObj);
+
+				if (ns != null) {
+					var obj = ns.FindName(name);
+					if (obj != null)
+						return obj;
+				}
+
+				xamlObj = xamlObj.ParentObject;
+			}
+			
+			return null;
+		}
+
+		public object Resolve(string name, out bool isFullyInitialized)
+		{
+			var ret = Resolve(name);
+			isFullyInitialized = ret != null;
+			return ret;
+		}
+
+		public object GetFixupToken(IEnumerable<string> names)
+		{
+			return null;
+		}
+
+		public object GetFixupToken(IEnumerable<string> names, bool canAssignDirectly)
+		{
+			return null;
+		}
+
+		public IEnumerable<KeyValuePair<string, object>> GetAllNamesAndValuesInScope()
+		{
+			return null;
+		}
+
+		public bool IsFixupTokenAvailable
+		{
+			get { return false; }
+		}
+
+		public event EventHandler OnNameScopeInitializationComplete;
 
 		#endregion
 	}

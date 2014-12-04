@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
 using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Markup;
 
 namespace ICSharpCode.WpfDesign.XamlDom
@@ -37,10 +38,11 @@ namespace ICSharpCode.WpfDesign.XamlDom
 		/// </summary>
 		public static bool IsCollectionType(Type type)
 		{
-			return typeof(IList).IsAssignableFrom(type)
+			return type != typeof(LineBreak) && (
+                   typeof(IList).IsAssignableFrom(type)
 				|| type.IsArray
 				|| typeof(IAddChild).IsAssignableFrom(type)
-				|| typeof(IDictionary).IsAssignableFrom(type);
+				|| typeof(IDictionary).IsAssignableFrom(type));
 		}		
 
 		/// <summary>
@@ -83,11 +85,12 @@ namespace ICSharpCode.WpfDesign.XamlDom
 			} else if (collectionInstance is IDictionary) {
 				object val = newElement.GetValueFor(null);
 				object key = newElement is XamlObject ? ((XamlObject)newElement).GetXamlAttribute("Key") : null;
-				//if (key == null || key == "") {
-				//	if (val is Style)
-				//		key = ((Style)val).TargetType;
-				//}
-				if (key == null || (key as string) == "")
+                if (key == null || key == "")
+                {
+                    if (val is Style)
+                        key = ((Style)val).TargetType;
+                }
+                if (key == null || (key as string) == "")
 					key = val;
 				((IDictionary)collectionInstance).Add(key, val);
 			} else {

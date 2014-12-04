@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Interop;
@@ -79,6 +80,8 @@ namespace ICSharpCode.WpfDesign.XamlDom
 				throw new ArgumentNullException("reader");
 			return Parse(XmlReader.Create(reader), settings);
 		}
+
+		private XmlNode currentParsedNode;
 		
 		/// <summary>
 		/// Parses a XAML document using an XmlReader.
@@ -127,7 +130,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 				var root = p.ParseObject(document.DocumentElement);
 				p.document.ParseComplete(root);
 			} catch (Exception x) {
-				p.ReportException(x, document.DocumentElement);
+				p.ReportException(x, p.currentParsedNode);
 			}
 
 			return p.document;
@@ -189,6 +192,15 @@ namespace ICSharpCode.WpfDesign.XamlDom
 		XamlObject ParseObject(XmlElement element)
 		{
 			Type elementType = settings.TypeFinder.GetType(element.NamespaceURI, element.LocalName);
+
+			if (typeof (FrameworkTemplate).IsAssignableFrom(elementType))
+			{
+				var xamlObj = new XamlObject(document, element, elementType, TemplateHelper.GetFrameworkTemplate(element));
+				xamlObj.ParentObject = currentXamlObject;
+				return xamlObj;
+			}
+
+
 			if (elementType == null) {
 				elementType = settings.TypeFinder.GetType(element.NamespaceURI, element.LocalName + "Extension");
 				if (elementType == null) {
@@ -219,12 +231,15 @@ namespace ICSharpCode.WpfDesign.XamlDom
 				if (onlyTextNodes && numberOfTextNodes == 1) {
 					foreach (XmlNode childNode in element.ChildNodes) {
 						if (childNode.NodeType == XmlNodeType.Text) {
+							currentParsedNode = childNode;
 							initializeFromTextValueInsteadOfConstructor = (XamlTextValue)ParseValue(childNode);
 						}
 					}
 				}
 			}
-			
+
+			currentParsedNode = element;
+
 			object instance;
 			if (initializeFromTextValueInsteadOfConstructor != null) {
 				instance = TypeDescriptor.GetConverter(elementType).ConvertFromString(
@@ -279,13 +294,11 @@ namespace ICSharpCode.WpfDesign.XamlDom
 					}
 					continue;
 				}
-					
+				
 				ParseObjectAttribute(obj, attribute);
 			}
 			
-			if (!(obj.Instance is Style)) {
-				ParseObjectContent(obj, element, defaultProperty, initializeFromTextValueInsteadOfConstructor);
-			}
+			ParseObjectContent(obj, element, defaultProperty, initializeFromTextValueInsteadOfConstructor);
 			
 			if (iSupportInitializeInstance != null) {
 				iSupportInitializeInstance.EndInit();
@@ -317,6 +330,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 				collectionPropertyElement = element;
 			} else if (defaultProperty != null && defaultProperty.IsCollection && !element.IsEmpty) {
 				foreach (XmlNode childNode in elementChildNodes) {
+					currentParsedNode = childNode;
 					XmlElement childElement = childNode as XmlElement;
 					if (childElement == null || !ObjectChildElementIsPropertyElement(childElement)) {
 						obj.AddProperty(collectionProperty = new XamlProperty(obj, defaultProperty));
@@ -326,37 +340,58 @@ namespace ICSharpCode.WpfDesign.XamlDom
 					}
 				}
 			}
-			
-			foreach (XmlNode childNode in elementChildNodes) {
-				XmlElement childElement = childNode as XmlElement;
-				if (childElement != null) {
-					if (childElement.NamespaceURI == XamlConstants.XamlNamespace)
-						continue;
-					
-					if (ObjectChildElementIsPropertyElement(childElement)) {
-						ParseObjectChildElementAsPropertyElement(obj, childElement, defaultProperty);
-						continue;
-					}
+
+			currentParsedNode = element;
+
+			if (collectionType != null && collectionInstance == null && elementChildNodes.Count() == 1)
+			{
+				var firstChild = elementChildNodes.First() as XmlElement;
+				if (ObjectChildElementIsCollectionInstance(firstChild, collectionType))
+				{
+					collectionInstance = ParseObject(firstChild);
+					collectionProperty.PropertyValue = (XamlPropertyValue) collectionInstance;
 				}
-				if (initializeFromTextValueInsteadOfConstructor != null)
-					continue;
-				XamlPropertyValue childValue = ParseValue(childNode);
-				if (childValue != null) {
-					if (collectionProperty != null) {
-						collectionProperty.ParserAddCollectionElement(collectionPropertyElement, childValue);
-						CollectionSupport.AddToCollection(collectionType, collectionInstance, childValue);
-					} else {
-						if (defaultProperty == null)
-							throw new XamlLoadException("This element does not have a default value, cannot assign to it");
+				else
+				{
+					throw new XamlLoadException("Collection Instance is null");
+				}
+			}
+			else
+			{
+				foreach (XmlNode childNode in elementChildNodes) {
+					currentParsedNode = childNode;
+					XmlElement childElement = childNode as XmlElement;
+					if (childElement != null) {
+						if (childElement.NamespaceURI == XamlConstants.XamlNamespace)
+							continue;
 						
-						if (isDefaultValueSet)
-							throw new XamlLoadException("default property may have only one value assigned");
-						
-						obj.AddProperty(new XamlProperty(obj, defaultProperty, childValue));
-						isDefaultValueSet = true;
+						if (ObjectChildElementIsPropertyElement(childElement)) {
+							ParseObjectChildElementAsPropertyElement(obj, childElement, defaultProperty);
+							continue;
+						}
+					}
+					if (initializeFromTextValueInsteadOfConstructor != null)
+						continue;
+					XamlPropertyValue childValue = ParseValue(childNode);
+					if (childValue != null) {
+						if (collectionProperty != null) {
+							collectionProperty.ParserAddCollectionElement(collectionPropertyElement, childValue);
+							CollectionSupport.AddToCollection(collectionType, collectionInstance, childValue);
+						} else {
+							if (defaultProperty == null)
+								throw new XamlLoadException("This element does not have a default value, cannot assign to it");
+							
+							if (isDefaultValueSet)
+								throw new XamlLoadException("default property may have only one value assigned");
+							
+							obj.AddProperty(new XamlProperty(obj, defaultProperty, childValue));
+							isDefaultValueSet = true;
+						}
 					}
 				}
 			}
+
+			currentParsedNode = element;
 		}
 
 		IEnumerable<XmlNode> GetNormalizedChildNodes(XmlElement element)
@@ -395,10 +430,12 @@ namespace ICSharpCode.WpfDesign.XamlDom
 		                                                 Justification="We need to continue parsing, and the error is reported to the user.")]
 		XamlPropertyValue ParseValue(XmlNode childNode)
 		{
+			currentParsedNode = childNode;
+
 			try {
-				return ParseValueCore(childNode);
+				return ParseValueCore(currentParsedNode);
 			} catch (Exception x) {
-				ReportException(x, childNode);
+				ReportException(x, currentParsedNode);
 			}
 			return null;
 		}
@@ -440,13 +477,11 @@ namespace ICSharpCode.WpfDesign.XamlDom
 		
 		internal static XamlPropertyInfo FindProperty(object elementInstance, Type propertyType, string propertyName)
 		{
-			PropertyDescriptorCollection properties;
-			if (elementInstance != null) {
-				properties = TypeDescriptor.GetProperties(elementInstance);
-			} else {
-				properties = TypeDescriptor.GetProperties(propertyType);
-			}
-			PropertyDescriptor propertyInfo = properties[propertyName];
+			PropertyDescriptor propertyInfo = TypeDescriptor.GetProperties(propertyType)[propertyName];
+
+			if (propertyInfo == null && elementInstance != null)
+				propertyInfo = TypeDescriptor.GetProperties(elementInstance).OfType<DependencyPropertyDescriptor>().FirstOrDefault(x => x.IsAttached && x.Name == propertyName);
+			
 			if (propertyInfo != null) {
 				return new XamlNormalPropertyInfo(propertyInfo);
 			} else {
@@ -525,12 +560,27 @@ namespace ICSharpCode.WpfDesign.XamlDom
 			return null;
 		}
 		
-		internal static XamlPropertyInfo GetPropertyInfo(XamlTypeFinder typeFinder, object elementInstance, Type elementType, string xmlNamespace, string localName)
+		internal static XamlPropertyInfo GetPropertyInfo(XamlTypeFinder typeFinder, object elementInstance, Type elementType, string xmlNamespace, string localName, bool tryFindAllProperties = false)
 		{
 			string typeName, propertyName;
 			SplitQualifiedIdentifier(localName, out typeName, out propertyName);
 			Type propertyType = FindType(typeFinder, xmlNamespace, typeName);
-			if (elementType == propertyType || propertyType.IsAssignableFrom(elementType)) {
+
+			//Tries to Find All properties, even if they are not attached (For Setters, Bindings, ...)
+			if (tryFindAllProperties)
+			{
+				XamlPropertyInfo propertyInfo = null;
+				try
+				{
+					propertyInfo = FindProperty(elementInstance, propertyType, propertyName);
+				}
+				catch (Exception ex)
+				{ }
+				if (propertyInfo != null)
+					return propertyInfo;
+			}
+
+			if (elementType.IsAssignableFrom(propertyType) || propertyType.IsAssignableFrom(elementType)) {
 				return FindProperty(elementInstance, propertyType, propertyName);
 			} else {
 				// This is an attached property
@@ -581,10 +631,16 @@ namespace ICSharpCode.WpfDesign.XamlDom
 		{
 			return element.LocalName.Contains(".");
 		}
-		
+
+		static bool ObjectChildElementIsCollectionInstance(XmlElement element, Type collectionType)
+		{
+			return element.Name == collectionType.Name;
+		}
+
 		static bool IsElementChildACollectionForProperty(XamlTypeFinder typeFinder, XmlElement element, XamlPropertyInfo propertyInfo)
 		{
-			return element.ChildNodes.Count == 1 && propertyInfo.ReturnType.IsAssignableFrom(FindType(typeFinder, element.FirstChild.NamespaceURI, element.FirstChild.LocalName));
+			var nodes = element.ChildNodes.Cast<XmlNode>().Where(x => !(x is XmlWhitespace)).ToList();
+			return nodes.Count == 1 && propertyInfo.ReturnType.IsAssignableFrom(FindType(typeFinder, nodes[0].NamespaceURI, nodes[0].LocalName));
 		}
 		
 		void ParseObjectChildElementAsPropertyElement(XamlObject obj, XmlElement element, XamlPropertyInfo defaultProperty)
@@ -614,7 +670,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 				
 				isElementChildACollectionForProperty = IsElementChildACollectionForProperty(settings.TypeFinder, element, propertyInfo);
 				if (isElementChildACollectionForProperty)
-					collectionProperty.ParserSetPropertyElement((XmlElement)element.FirstChild);
+					collectionProperty.ParserSetPropertyElement((XmlElement)element.ChildNodes.Cast<XmlNode>().Where(x => !(x is XmlWhitespace)).First());
 				else {
 					collectionInstance = collectionProperty.propertyInfo.GetValue(obj.Instance);
 					collectionProperty.ParserSetPropertyElement(element);
@@ -627,6 +683,7 @@ namespace ICSharpCode.WpfDesign.XamlDom
 			}
 			
 			foreach (XmlNode childNode in element.ChildNodes) {
+				currentParsedNode = childNode;
 				XamlPropertyValue childValue = ParseValue(childNode);
 				if (childValue != null) {
 					if (propertyInfo.IsCollection) {
@@ -647,7 +704,9 @@ namespace ICSharpCode.WpfDesign.XamlDom
 					}
 				}
 			}
-			
+
+			currentParsedNode = element;
+
 			currentXmlSpace = oldXmlSpace;
 		}
 
@@ -722,13 +781,14 @@ namespace ICSharpCode.WpfDesign.XamlDom
 				if(xmlnsAttribute!=null)
 					element.Attributes.Remove(xmlnsAttribute);
 				
-				RemoveRootNamespacesFromNodeAndChildNodes(root, element);
-				
 				XamlParser parser = new XamlParser();
 				parser.settings = settings;
 				parser.errorSink = (IXamlErrorSink)settings.ServiceProvider.GetService(typeof(IXamlErrorSink));
 				parser.document = root.OwnerDocument;
 				var xamlObject = parser.ParseObject(element as XmlElement);
+
+				RemoveRootNamespacesFromNodeAndChildNodes(root, element);
+
 				if (xamlObject != null)
 					return xamlObject;
 			}

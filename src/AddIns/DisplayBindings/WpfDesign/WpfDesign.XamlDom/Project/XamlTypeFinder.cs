@@ -117,11 +117,11 @@ namespace ICSharpCode.WpfDesign.XamlDom
 		/// <summary>
 		/// Gets the XML namespace that can be used for the specified assembly/namespace combination.
 		/// </summary>
-		public string GetXmlNamespaceFor(Assembly assembly, string @namespace)
+		public string GetXmlNamespaceFor(Assembly assembly, string @namespace, bool getClrNamespace = false)
 		{
 			AssemblyNamespaceMapping mapping = new AssemblyNamespaceMapping(assembly, @namespace);
 			string xmlNamespace;
-			if (reverseDict.TryGetValue(mapping, out xmlNamespace)) {
+			if (!getClrNamespace && reverseDict.TryGetValue(mapping, out xmlNamespace)) {
 				return xmlNamespace;
 			} else {
 				return "clr-namespace:" + mapping.Namespace + ";assembly=" + mapping.Assembly.GetName().Name;
@@ -162,7 +162,12 @@ namespace ICSharpCode.WpfDesign.XamlDom
 				assembly = name.Substring("assembly=".Length);
 			}
 			XamlNamespace ns = new XamlNamespace(null, xmlNamespace);
+
 			Assembly asm = LoadAssembly(assembly);
+
+			if (asm == null && assembly == "mscorlib")
+				asm = typeof (Boolean).Assembly;
+
 			if (asm != null) {
 				AddMappingToNamespace(ns, new AssemblyNamespaceMapping(asm, namespaceName));
 			}

@@ -117,17 +117,14 @@
 		<Setter Property="Template">
 			<Setter.Value>
 				<ControlTemplate TargetType="{x:Type Controls:WindowClone}">
-					<Border Background="{DynamicResource {x:Static SystemColors.GradientActiveCaptionBrushKey}}" BorderBrush="{DynamicResource {x:Static SystemColors.WindowFrameBrushKey}}" BorderThickness="1,1,1,1" CornerRadius="5,5,5,5">
+					<Border Background="{DynamicResource {x:Static SystemColors.GradientActiveCaptionBrushKey}}" BorderBrush="{DynamicResource {x:Static SystemColors.WindowFrameBrushKey}}" BorderThickness="1,1,1,1">
 						<DockPanel Margin="4,0,4,4">
 							<DockPanel Height="26" DockPanel.Dock="Top">
-								<Image Width="16" Height="16" Margin="1,0,0,0" Source="{TemplateBinding Window.Icon}" />
-								<Button Name="CloseButton" VerticalAlignment="Top" Width="43" Height="17" DockPanel.Dock="Right">
-									<Path Fill="#FFF6F2F2" Stretch="Uniform" Margin="1" Stroke="#FF808080" Data="M160,400 L176,400 192,384 208,400 224,400 200,376 224,352 208,352 192,368 176,352 160,352 184,376 z" />
-								</Button>
-								<Button Name="MaximiseButton" VerticalAlignment="Top" Width="25" Height="17" DockPanel.Dock="Right" />
-								<Button Name="MinimizeButton" VerticalAlignment="Top" Width="25" Height="17" DockPanel.Dock="Right">
-									<!--<Rectangle Fill="#FFF6F2F2" RadiusX="0.5" RadiusY="0.5" Width="12" Height="5" Stroke="#FF808080" VerticalAlignment="Bottom" HorizontalAlignment="Center"/>-->
-								</Button>
+								<Image Width="16" Height="16" Margin="1,0,0,0" Source="/ICSharpCode.WpfDesign.Designer;component/Images/Icons.32x32.EmptyProjectIcon.png" Visibility="{Binding Path=(Window.Icon), RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static Converters:CollapsedWhenNotNull.Instance}}" />
+								<Image Width="16" Height="16" Margin="1,0,0,0" Source="{TemplateBinding Window.Icon}" Visibility="{Binding Path=(Window.Icon), RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static Converters:CollapsedWhenZero.Instance}}" />
+								<Button Content="r" FontFamily="Marlett" Name="CloseButton" VerticalAlignment="Top" Width="43" Height="17" DockPanel.Dock="Right" />
+								<Button Content="1" FontFamily="Marlett" Name="MinimizeButton" VerticalAlignment="Top" Width="25" Height="17" DockPanel.Dock="Right" Visibility="{Binding Path=(Window.ResizeMode), Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static Converters:EnumCollapsed.Instance}, ConverterParameter=NoResize}" />
+								<Button Content="0" FontFamily="Marlett" Name="MaximiseButton" VerticalAlignment="Top" Width="25" Height="17" DockPanel.Dock="Right" Visibility="{Binding Path=(Window.ResizeMode), Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static Converters:EnumCollapsed.Instance}, ConverterParameter=NoResize}" />
 								<Label Margin="4,0,0,0" Content="{TemplateBinding Window.Title}" />
 							</DockPanel>
 							<Border Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
@@ -333,7 +330,16 @@
 							<RowDefinition Height="5" />
 						</Grid.RowDefinitions>
 						<Path SnapsToDevicePixels="True" Grid.Row="0" Stroke="#AC0000" StrokeThickness="1.0" Data="M0,0 L1,0 M0.75,0 L0.75,1" Stretch="Fill" />
-						<TextBlock Text="{Binding Path=ActualHeight, Converter={x:Static Converters:FormatDoubleConverter.Instance}}" HorizontalAlignment="Center" Margin="8,0,0,1" Padding="1,1,1,1" FontSize="10" Grid.Row="1">
+						<TextBlock HorizontalAlignment="Center" Margin="8,0,0,1" Padding="1,1,1,1" FontSize="10" Grid.Row="1">
+							<TextBlock.Text>
+								<MultiBinding Converter="{x:Static Converters:ControlToRealHeightConverter.Instance}" StringFormat="0">
+									<MultiBinding.Bindings>
+										<Binding />
+										<Binding Path="ActualHeight" UpdateSourceTrigger="PropertyChanged" />
+										<Binding Path="Height" UpdateSourceTrigger="PropertyChanged" />
+									</MultiBinding.Bindings>
+								</MultiBinding>
+							</TextBlock.Text>
 							<TextBlock.LayoutTransform>
 								<RotateTransform Angle="270" CenterX="0.5" CenterY="0.5" />
 							</TextBlock.LayoutTransform>
@@ -355,7 +361,17 @@
 							<ColumnDefinition Width="5" />
 						</Grid.ColumnDefinitions>
 						<Path Grid.Column="0" Stroke="#AC0000" StrokeThickness="1" Data="M0,0 L0,1 M0,0.75 L1,0.75" Stretch="Fill" SnapsToDevicePixels="True" />
-						<TextBlock Text="{Binding Path=ActualWidth,  Converter={x:Static Converters:FormatDoubleConverter.Instance}}" HorizontalAlignment="Center" Margin="0,8,0,0" Padding="1,1,1,1" FontSize="10" Grid.Column="1" />
+						<TextBlock HorizontalAlignment="Center" Margin="0,8,0,0" Padding="1,1,1,1" FontSize="10" Grid.Column="1">
+							<TextBlock.Text>
+								<MultiBinding Converter="{x:Static Converters:ControlToRealWidthConverter.Instance}" StringFormat="0">
+									<MultiBinding.Bindings>
+										<Binding />
+										<Binding Path="ActualWidth" UpdateSourceTrigger="PropertyChanged" />
+										<Binding Path="Width" UpdateSourceTrigger="PropertyChanged" />
+									</MultiBinding.Bindings>
+								</MultiBinding>
+							</TextBlock.Text>
+						</TextBlock>
 						<Path Grid.Column="2" Stroke="#AC0000" StrokeThickness="1" Data="M0,0.75 L3,0.75 M3,0 L3,1 " Stretch="Fill" SnapsToDevicePixels="True" />
 					</Grid>
 				</ControlTemplate>
