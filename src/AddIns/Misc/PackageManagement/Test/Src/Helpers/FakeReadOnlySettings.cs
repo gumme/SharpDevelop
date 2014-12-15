@@ -17,46 +17,30 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Runtime.Versioning;
-using ICSharpCode.PackageManagement.Scripting;
-using NuGet;
+using ICSharpCode.PackageManagement.Design;
 
 namespace PackageManagement.Tests.Helpers
 {
-	public class FakePackageScriptFileName : IPackageScriptFileName
+	public class FakeReadOnlySettings : FakeSettings
 	{
-		public string PackageInstallDirectory { get; set; }
-		
-		public bool ScriptDirectoryExistsReturnValue = true;
-		
-		public bool ScriptDirectoryExists()
+		public override bool DeleteSection(string section)
 		{
-			return ScriptDirectoryExistsReturnValue;
+			throw new ApplicationException("DeleteSection called");
 		}
 		
-		public bool FileExistsReturnValue = true;
-		
-		public bool FileExists()
+		public override bool DeleteValue(string section, string key)
 		{
-			return FileExistsReturnValue;
+			throw new ApplicationException("DeleteValue called");
 		}
 		
-		public string GetScriptDirectoryReturnValue = String.Empty;
-		
-		public string GetScriptDirectory()
+		public override void SetNestedValues(string section, string key, System.Collections.Generic.IList<System.Collections.Generic.KeyValuePair<string, string>> values)
 		{
-			return GetScriptDirectoryReturnValue;
+			throw new ApplicationException("SetNestedValues called");
 		}
 		
-		public string ToStringReturnValue = String.Empty;
-		
-		public override string ToString()
+		public override void SetPackageRestoreSetting(bool enabled)
 		{
-			return ToStringReturnValue;
-		}
-		
-		public void UseTargetSpecificFileName(IPackage package, FrameworkName frameworkName)
-		{
+			throw new ApplicationException("SetPackageRestoreSetting called");
 		}
 	}
 }

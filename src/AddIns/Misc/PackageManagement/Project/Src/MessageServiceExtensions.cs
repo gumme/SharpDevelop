@@ -17,46 +17,37 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Runtime.Versioning;
-using ICSharpCode.PackageManagement.Scripting;
-using NuGet;
+using System.IO;
+using ICSharpCode.Core;
 
-namespace PackageManagement.Tests.Helpers
+namespace ICSharpCode.PackageManagement
 {
-	public class FakePackageScriptFileName : IPackageScriptFileName
+	public static class MessageServiceExtensions
 	{
-		public string PackageInstallDirectory { get; set; }
-		
-		public bool ScriptDirectoryExistsReturnValue = true;
-		
-		public bool ScriptDirectoryExists()
+		public static void ShowNuGetConfigFileSaveError(string message)
 		{
-			return ScriptDirectoryExistsReturnValue;
+			MessageService.ShowError(
+					String.Format("{0}{1}{1}{2}",
+					message,
+					Environment.NewLine,
+					GetSaveNuGetConfigFileErrorMessage()));
 		}
 		
-		public bool FileExistsReturnValue = true;
-		
-		public bool FileExists()
+		/// <summary>
+		/// Returns a non-Windows specific error message instead of the one NuGet returns.
+		/// 
+		/// NuGet returns a Windows specific error:
+		/// 
+		/// "DeleteSection" cannot be called on a NullSettings. This may be caused on account of 
+		/// insufficient permissions to read or write to "%AppData%\NuGet\NuGet.config".
+		/// </summary>
+		static string GetSaveNuGetConfigFileErrorMessage()
 		{
-			return FileExistsReturnValue;
-		}
-		
-		public string GetScriptDirectoryReturnValue = String.Empty;
-		
-		public string GetScriptDirectory()
-		{
-			return GetScriptDirectoryReturnValue;
-		}
-		
-		public string ToStringReturnValue = String.Empty;
-		
-		public override string ToString()
-		{
-			return ToStringReturnValue;
-		}
-		
-		public void UseTargetSpecificFileName(IPackage package, FrameworkName frameworkName)
-		{
+			string path = Path.Combine (
+				Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+				"NuGet",
+				"NuGet.config");
+			return String.Format("Unable to read or write to \"{0}\".", path);
 		}
 	}
 }
