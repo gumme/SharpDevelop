@@ -570,12 +570,19 @@ namespace ICSharpCode.WpfDesign.XamlDom
 		void CreateWrapper()
 		{
 			if (Instance is BindingBase) {
-				wrapper = new BindingWrapper();
+				wrapper = new BindingWrapper(this);
 			} else if (Instance is StaticResourceExtension) {
-				wrapper = new StaticResourceWrapper();
+				wrapper = new StaticResourceWrapper(this);
 			}
-			if (wrapper != null) {
-				wrapper.XamlObject = this;
+			
+			if (wrapper == null && IsMarkupExtension) {
+				var markupExtensionWrapperAttribute = Instance.GetType().GetCustomAttributes(typeof(MarkupExtensionWrapperAttribute), false).FirstOrDefault() as MarkupExtensionWrapperAttribute;
+				if(markupExtensionWrapperAttribute != null) {
+					wrapper = MarkupExtensionWrapper.CreateWrapper(markupExtensionWrapperAttribute.MarkupExtensionWrapperType, this);
+				}
+				else {
+					wrapper = MarkupExtensionWrapper.TryCreateWrapper(Instance.GetType(), this);
+				}
 			}
 		}
 
@@ -609,14 +616,13 @@ namespace ICSharpCode.WpfDesign.XamlDom
 		public event EventHandler NameChanged;
 	}
 
-	abstract class MarkupExtensionWrapper
-	{
-		public XamlObject XamlObject { get; set; }
-		public abstract object ProvideValue();
-	}
-
 	class BindingWrapper : MarkupExtensionWrapper
 	{
+		public BindingWrapper(XamlObject xamlObject)
+			: base(xamlObject)
+		{
+		}
+		
 		public override object ProvideValue()
 		{
 			var target = XamlObject.Instance as BindingBase;
@@ -662,6 +668,11 @@ namespace ICSharpCode.WpfDesign.XamlDom
 
 	class StaticResourceWrapper : MarkupExtensionWrapper
 	{
+		public StaticResourceWrapper(XamlObject xamlObject)
+			: base(xamlObject)
+		{
+		}
+		
 		public override object ProvideValue()
 		{
 			var target = XamlObject.Instance as StaticResourceExtension;
