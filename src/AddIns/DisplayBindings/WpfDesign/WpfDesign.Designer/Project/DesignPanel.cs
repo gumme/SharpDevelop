@@ -25,10 +25,11 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-
+using System.Linq;
 using ICSharpCode.WpfDesign.Adorners;
 using ICSharpCode.WpfDesign.Designer.Controls;
 using ICSharpCode.WpfDesign.Designer.Xaml;
+using ICSharpCode.WpfDesign.Extensions;
 
 namespace ICSharpCode.WpfDesign.Designer
 {
@@ -353,6 +354,22 @@ namespace ICSharpCode.WpfDesign.Designer
 		int dx = 0;
 		int dy = 0;
 		
+		/// <summary>
+		///  class implementing IKeyDown can decide if the default action for 
+		/// key events should be overrridden by letting InvokeDefaultAction return  false
+		/// </summary>
+		/// <param name="e"></param>
+		/// <returns></returns>
+		bool InvokeDefaultKeyDownAction(Extension e)
+		{
+			var keyDown = e as IKeyDown;
+			if (keyDown != null) {
+				return keyDown.InvokeDefaultAction;
+			}
+			
+			return true;
+		}
+		
 		private void DesignPanel_KeyUp(object sender, KeyEventArgs e)
 		{
 			if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down)
@@ -364,18 +381,47 @@ namespace ICSharpCode.WpfDesign.Designer
 					placementOp = null;
 				}
 			}
+			
+			//pass the key event to the underlying objects if they have implemented IKeyUp interface
+			//OBS!!!! this call needs to be here, after the placementOp.Commit().
+			//In case the underlying object has a operation of its own this operation needs to be commited first
+			foreach (DesignItem di in Context.Services.Selection.SelectedItems.Reverse()) {
+				foreach (Extension ext in di.Extensions) {
+					var keyUp = ext as IKeyUp;
+					if (keyUp != null) {
+						keyUp.KeyUpAction(sender, e);
+					}
+				}
+			}
 		}
 		
 		void DesignPanel_KeyDown(object sender, KeyEventArgs e)
 		{
+			
+			//pass the key event down to the underlying objects if they have implemented IKeyUp interface
+			//OBS!!!! this call needs to be here, before the PlacementOperation.Start.
+			//In case the underlying object has a operation of its own this operation needs to be set first
+			foreach (DesignItem di in Context.Services.Selection.SelectedItems) {
+				foreach (Extension ext in di.Extensions) {
+					var keyDown = ext as IKeyDown;
+					if (keyDown != null) {
+						keyDown.KeyDownAction(sender, e);
+					}
+				}
+			}
+
 			if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down)
 			{
 				e.Handled = true;
 				
 				if (placementOp == null) {
+					
+					//find all objects that want to use default key action
+					List<DesignItem> placedItems = Context.Services.Selection.SelectedItems.Where(x => x.Extensions.All(InvokeDefaultKeyDownAction)).ToList();
+						if (placedItems.Count < 1) return;
 					dx = 0;
 					dy = 0;
-					placementOp = PlacementOperation.Start(Context.Services.Selection.SelectedItems, PlacementType.Move);
+					placementOp = PlacementOperation.Start(placedItems, PlacementType.Move);
 				}
 				
 				

@@ -17,6 +17,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Collections.Generic;
 
 namespace ICSharpCode.WpfDesign.Extensions
 {
@@ -28,6 +29,7 @@ namespace ICSharpCode.WpfDesign.Extensions
 	{
 		Type _designedItemType;
 		Type _overrideExtension;
+		List<Type> _overrideExtensions = new List<Type>();
 		
 		/// <summary>
 		/// Gets the type of the item that is designed using this extension.
@@ -35,6 +37,18 @@ namespace ICSharpCode.WpfDesign.Extensions
 		public Type DesignedItemType {
 			get { return _designedItemType; }
 		}
+		
+		/// <summary>
+        /// Gets/Sets the types of another extension that this extension is overriding.
+        /// </summary>
+        public Type[] OverrideExtensions
+        {
+            get { return _overrideExtensions.ToArray(); }
+            set
+            {
+                _overrideExtensions.AddRange(value);
+            }
+        }
 		
 		/// <summary>
 		/// Gets/Sets the type of another extension that this extension is overriding.
@@ -47,6 +61,8 @@ namespace ICSharpCode.WpfDesign.Extensions
 					if (!typeof(Extension).IsAssignableFrom(value)) {
 						throw new ArgumentException("OverrideExtension must specify the type of an Extension.");
 					}
+					if(!_overrideExtensions.Contains(value))
+                        _overrideExtensions.Add(value);
 				}
 			}
 		}

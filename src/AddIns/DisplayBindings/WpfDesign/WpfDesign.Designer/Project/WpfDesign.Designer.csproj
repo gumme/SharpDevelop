@@ -84,6 +84,11 @@
       <Link>Configuration\GlobalAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Controls\RenderTransformOriginThumb.cs" />
+    <Compile Include="Extensions\LineExtensionBase.cs" />
+    <Compile Include="Extensions\LineHandlerExtension.cs" />
+    <Compile Include="Extensions\MultiPointResizeThumb.cs" />
+    <Compile Include="Extensions\PointTrackerPlacementSupport.cs" />
+    <Compile Include="Extensions\PolyLineHandlerExtension.cs" />
     <Compile Include="Extensions\RightClickContextMenu.xaml.cs">
       <DependentUpon>RightClickContextMenu.xaml</DependentUpon>
       <SubType>Code</SubType>
