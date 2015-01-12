@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-
 namespace ICSharpCode.WpfDesign.Extensions
 {
 	/// <summary>
@@ -39,16 +38,16 @@ namespace ICSharpCode.WpfDesign.Extensions
 		}
 		
 		/// <summary>
-        /// Gets/Sets the types of another extension that this extension is overriding.
-        /// </summary>
-        public Type[] OverrideExtensions
-        {
-            get { return _overrideExtensions.ToArray(); }
-            set
-            {
-                _overrideExtensions.AddRange(value);
-            }
-        }
+		/// Gets/Sets the types of another extension that this extension is overriding.
+		/// </summary>
+		public Type[] OverrideExtensions
+		{
+			get { return _overrideExtensions.ToArray(); }
+			set
+			{
+				_overrideExtensions.AddRange(value);
+			}
+		}
 		
 		/// <summary>
 		/// Gets/Sets the type of another extension that this extension is overriding.
@@ -62,7 +61,7 @@ namespace ICSharpCode.WpfDesign.Extensions
 						throw new ArgumentException("OverrideExtension must specify the type of an Extension.");
 					}
 					if(!_overrideExtensions.Contains(value))
-                        _overrideExtensions.Add(value);
+						_overrideExtensions.Add(value);
 				}
 			}
 		}

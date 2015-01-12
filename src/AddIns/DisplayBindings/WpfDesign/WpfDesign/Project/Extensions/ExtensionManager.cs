@@ -66,20 +66,21 @@ namespace ICSharpCode.WpfDesign.Extensions
 			internal readonly ExtensionServer Server;
 			internal readonly List<Type> OverriddenExtensionTypes = new List<Type>();
 			internal readonly int Order;
-
-			public ExtensionEntry(Type extensionType, ExtensionServer server, Type overriddenExtensionType, int Order)
+			
+			public ExtensionEntry(Type extensionType, ExtensionServer server, Type overriddenExtensionType, int order)
 			{
 				this.ExtensionType = extensionType;
 				this.Server = server;
 				this.OverriddenExtensionTypes.Add(overriddenExtensionType);
-				this.Order = Order;
+				this.Order = order;
 			}
-			public ExtensionEntry(Type extensionType, ExtensionServer server, List<Type> overriddenExtensionTypes, int Order)
+			
+			public ExtensionEntry(Type extensionType, ExtensionServer server, List<Type> overriddenExtensionTypes, int order)
 			{
 				this.ExtensionType = extensionType;
 				this.Server = server;
 				this.OverriddenExtensionTypes = overriddenExtensionTypes;
-				this.Order = Order;
+				this.Order = order;
 			}
 		}
 		
@@ -191,7 +192,7 @@ namespace ICSharpCode.WpfDesign.Extensions
 				foreach (ExtensionForAttribute designerFor in extensionForAttributes) {
 					ExtensionServer server = GetServerForExtension(type);
 					ExtensionAttribute extensionAttribute = type.GetCustomAttributes(typeof(ExtensionAttribute), false).FirstOrDefault() as ExtensionAttribute;
-					AddExtensionEntry(designerFor.DesignedItemType, new ExtensionEntry(type, server, designerFor.OverrideExtensions.ToList(), extensionAttribute != null ? extensionAttribute.Order : 0));
+					AddExtensionEntry(designerFor.DesignedItemType, new ExtensionEntry(type, server,  designerFor.OverrideExtensions.ToList(), extensionAttribute != null ? extensionAttribute.Order : 0));
 				}
 			}
 		}
