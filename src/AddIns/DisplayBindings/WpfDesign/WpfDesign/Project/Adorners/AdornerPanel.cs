@@ -153,7 +153,7 @@ namespace ICSharpCode.WpfDesign.Adorners
 			    {
                     GetPlacement(element).Arrange(this, element, finalSize);
 			    }
-			    catch (ObjectDeletedException exc)
+			    catch (ObjectDeletedException)
 			    {
                     objectsMarkedForDeletion.Add(element);
 			    }
