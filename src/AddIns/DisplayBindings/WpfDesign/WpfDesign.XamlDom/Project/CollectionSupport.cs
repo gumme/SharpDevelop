@@ -122,17 +122,16 @@ namespace ICSharpCode.WpfDesign.XamlDom
 					list.Insert(index, value);
 				}
 				return true;
-			}
-			else {
+			} else {
 				var hasInsert = collectionType.GetMethods().Any(x => x.Name == "Insert");
-				
+			
 				if (hasInsert) {
 					collectionType.InvokeMember(
 						"Insert", BindingFlags.Public | BindingFlags.InvokeMethod | BindingFlags.Instance,
 						null, collectionInstance,
 						new object[] { index, value },
 						CultureInfo.InvariantCulture);
-					
+				
 					return true;
 				}
 			}
