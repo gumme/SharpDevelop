@@ -202,11 +202,13 @@ namespace ICSharpCode.WpfDesign.Designer
 
 		public void Undo()
 		{
-			UndoService undoService = GetService<UndoService>();
-			IUndoAction action = undoService.UndoActions.First();
-			Debug.WriteLine("Undo " + action.Title);
-			undoService.Undo();
-			_designContext.Services.Selection.SetSelectedComponents(GetLiveElements(action.AffectedElements));
+			if(CanUndo()) {
+				UndoService undoService = GetService<UndoService>();
+				IUndoAction action = undoService.UndoActions.First();
+				Debug.WriteLine("Undo " + action.Title);
+				undoService.Undo();
+				_designContext.Services.Selection.SetSelectedComponents(GetLiveElements(action.AffectedElements));
+			}
 		}
 
 		public bool CanRedo()
@@ -217,11 +219,13 @@ namespace ICSharpCode.WpfDesign.Designer
 
 		public void Redo()
 		{
-			UndoService undoService = GetService<UndoService>();
-			IUndoAction action = undoService.RedoActions.First();
-			Debug.WriteLine("Redo " + action.Title);
-			undoService.Redo();
-			_designContext.Services.Selection.SetSelectedComponents(GetLiveElements(action.AffectedElements));
+			if(CanRedo()) {
+				UndoService undoService = GetService<UndoService>();
+				IUndoAction action = undoService.RedoActions.First();
+				Debug.WriteLine("Redo " + action.Title);
+				undoService.Redo();
+				_designContext.Services.Selection.SetSelectedComponents(GetLiveElements(action.AffectedElements));
+			}
 		}
 
 		public bool CanCopyOrCut()
