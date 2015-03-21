@@ -236,7 +236,7 @@ namespace ICSharpCode.WpfDesign.Designer.Services
 		/// Gets if undo actions are available.
 		/// </summary>
 		public bool CanUndo {
-			get { return _undoStack.Count > 0; }
+			get { return _undoStack.Count > 0  && _transactionStack.Count == 0; }
 		}
 		
 		/// <summary>
@@ -299,7 +299,7 @@ namespace ICSharpCode.WpfDesign.Designer.Services
 		/// <summary>
 		/// Gets if there are redo actions available.
 		/// </summary>
-		public bool CanRedo { get { return _redoStack.Count > 0; } }
+		public bool CanRedo { get { return _redoStack.Count > 0  && _transactionStack.Count == 0;; } }
 		
 		/// <summary>
 		/// Redoes a previously undone action.
