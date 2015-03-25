@@ -896,6 +896,64 @@ namespace ICSharpCode.WpfDesign.Tests.Designer
 		}
 		
 		[Test]
+		public void AddStaticResourceBeforeItemAddedToCollection()
+		{
+			DesignItem textBlock = CreateCanvasContext("<TextBlock/>");
+			DesignItem canvas = textBlock.Parent;
+			var component = canvas.Services.Component;
+			
+			const string resourceValue = "Hello world";
+			const string resourceKey = "res1";
+			
+			DesignItemProperty resProp = textBlock.Properties.GetProperty("Resources");
+			Assert.IsTrue(resProp.IsCollection);
+			DesignItem resourceItem = component.RegisterComponentForDesigner(resourceValue);
+			resourceItem.Key = resourceKey;
+			resProp.CollectionElements.Add(resourceItem);
+			
+			DesignItemProperty inputbinding = textBlock.Properties["InputBindings"];
+			Assert.IsTrue(inputbinding.IsCollection);
+			
+			const string expectedXaml = @"<TextBlock>
+  <TextBlock.Resources>
+    <Controls0:String x:Key=""res1"">Hello world</Controls0:String>
+  </TextBlock.Resources>
+  <TextBlock.InputBindings>
+    <MouseBinding Gesture=""LeftDoubleClick"" Command=""ApplicationCommands.New"">
+      <MouseBinding.CommandParameter>
+        <t:ExampleClass StringProp=""{StaticResource res1}"" />
+      </MouseBinding.CommandParameter>
+    </MouseBinding>
+  </TextBlock.InputBindings>
+</TextBlock>";
+			
+			DesignItemProperty commandParameterProp;
+			
+			using (ChangeGroup changeGroup = textBlock.Context.OpenGroup("", new[] { textBlock }))
+			{
+				DesignItem mouseBindingItem = component.RegisterComponentForDesigner(new System.Windows.Input.MouseBinding());
+				mouseBindingItem.Properties["Gesture"].SetValue(System.Windows.Input.MouseAction.LeftDoubleClick);
+				mouseBindingItem.Properties["Command"].SetValue("ApplicationCommands.New");
+				
+				commandParameterProp = mouseBindingItem.Properties["CommandParameter"];
+				commandParameterProp.SetValue(new ExampleClass());
+				commandParameterProp.Value.Properties["StringProp"].SetValue(new StaticResourceExtension());
+				commandParameterProp.Value.Properties["StringProp"].Value.Properties["ResourceKey"].SetValue(resourceKey);
+				
+				// The main thing being tested is that the StaticResourceExtension will
+				// resolve the resource correctly once the parent MouseBinding item is added to collection.
+				inputbinding.CollectionElements.Add(mouseBindingItem);
+
+				changeGroup.Commit();
+			}
+			
+			Assert.AreEqual(resourceValue, ((ExampleClass)commandParameterProp.ValueOnInstance).StringProp);
+			
+			AssertCanvasDesignerOutput(expectedXaml, textBlock.Context, "xmlns:Controls0=\"clr-namespace:System;assembly=mscorlib\"");
+			AssertLog("");
+		}
+		
+		[Test]
 		public void AddBrushAsResource()
 		{
 			DesignItem checkBox = CreateCanvasContext("<CheckBox/>");
