@@ -746,26 +746,46 @@ namespace ICSharpCode.WpfDesign.XamlDom
 
 		internal static object CreateObjectFromAttributeText(string valueText, XamlPropertyInfo targetProperty, XamlObject scope)
 		{
-			if (targetProperty.ReturnType == typeof(Uri)) {
-				return scope.OwnerDocument.TypeFinder.ConvertUriToLocalUri(new Uri(valueText, UriKind.RelativeOrAbsolute));
-			} else if (targetProperty.ReturnType == typeof(ImageSource)) {
-				var uri = scope.OwnerDocument.TypeFinder.ConvertUriToLocalUri(new Uri(valueText, UriKind.RelativeOrAbsolute));
-				return targetProperty.TypeConverter.ConvertFromString(scope.OwnerDocument.GetTypeDescriptorContext(scope), CultureInfo.InvariantCulture, uri.ToString());
-			}
+			try{
+				if (targetProperty.ReturnType == typeof(Uri)) {
+					return scope.OwnerDocument.TypeFinder.ConvertUriToLocalUri(new Uri(valueText, UriKind.RelativeOrAbsolute));
+				} else if (targetProperty.ReturnType == typeof(ImageSource)) {
+					var uri = scope.OwnerDocument.TypeFinder.ConvertUriToLocalUri(new Uri(valueText, UriKind.RelativeOrAbsolute));
+					return targetProperty.TypeConverter.ConvertFromString(scope.OwnerDocument.GetTypeDescriptorContext(scope), CultureInfo.InvariantCulture, uri.ToString());
+				}
 
-			return targetProperty.TypeConverter.ConvertFromString(
-				scope.OwnerDocument.GetTypeDescriptorContext(scope),
-				CultureInfo.InvariantCulture, valueText);
+				return targetProperty.TypeConverter.ConvertFromString(
+					scope.OwnerDocument.GetTypeDescriptorContext(scope),
+					CultureInfo.InvariantCulture, valueText);
+			}
+			catch (Exception e) {
+				IXamlErrorSink sink = (IXamlErrorSink)scope.OwnerDocument.ServiceProvider.GetService(typeof(IXamlErrorSink));
+				if (sink != null) {
+					sink.ReportError(e.Message + " in property: " + targetProperty.FullyQualifiedName, 0, 0);
+
+				}
+			}
+			return null;
 		}
 
 		internal static object CreateObjectFromAttributeText(string valueText, Type targetType, XamlObject scope)
 		{
-			var converter =
-				XamlNormalPropertyInfo.GetCustomTypeConverter(targetType) ??
-				TypeDescriptor.GetConverter(targetType);
+			try{
+				var converter =
+					XamlNormalPropertyInfo.GetCustomTypeConverter(targetType) ??
+					TypeDescriptor.GetConverter(targetType);
 
-			return converter.ConvertFromInvariantString(
-				scope.OwnerDocument.GetTypeDescriptorContext(scope), valueText);
+				return converter.ConvertFromInvariantString(
+					scope.OwnerDocument.GetTypeDescriptorContext(scope), valueText);
+			}
+			catch (Exception e) {
+				IXamlErrorSink sink = (IXamlErrorSink)scope.OwnerDocument.ServiceProvider.GetService(typeof(IXamlErrorSink));
+				if (sink != null) {
+					sink.ReportError(e.Message, 0, 0);
+
+				}
+			}
+			return null;
 		}
 		
 		/// <summary>
