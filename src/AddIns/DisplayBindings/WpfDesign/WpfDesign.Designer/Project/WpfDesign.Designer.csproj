@@ -135,6 +135,7 @@
       <DependentUpon>WrapItemContextMenu.xaml</DependentUpon>
     </Compile>
     <Compile Include="Extensions\WrapItemsContextMenuExtension.cs" />
+    <Compile Include="InstanceServiceManager.cs" />
     <Compile Include="MarkupExtensions\DesignItemBinding.cs" />
     <Compile Include="OutlineView\OutlineNodeNameService.cs" />
     <Compile Include="OutlineView\OutlineNodeBase.cs" />

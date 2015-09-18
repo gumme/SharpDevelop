@@ -70,17 +70,18 @@ namespace ICSharpCode.WpfDesign.Designer.Xaml
 			if (loadSettings == null)
 				throw new ArgumentNullException("loadSettings");
 			
-			this.Services.AddService(typeof(ISelectionService), new DefaultSelectionService());
-			this.Services.AddService(typeof(IToolService), new DefaultToolService(this));
-			this.Services.AddService(typeof(UndoService), new UndoService());
-			this.Services.AddService(typeof(IErrorService), new DefaultErrorService(this));
-			this.Services.AddService(typeof(IOutlineNodeNameService), new OutlineNodeNameService());
-			this.Services.AddService(typeof(ViewService), new DefaultViewService(this));
-			this.Services.AddService(typeof(OptionService), new OptionService());
-
-			var xamlErrorService = new XamlErrorService();
+			//all services instansiated with InstanceServiceManager are all possible to override with custom classes by Registe
+			this.Services.AddService(typeof(ISelectionService), InstanceServiceManager.GetService<ISelectionService>( this));
+			this.Services.AddService(typeof(IToolService), InstanceServiceManager.GetService<IToolService>(this));
+			this.Services.AddService(typeof(UndoService), InstanceServiceManager.GetService<UndoService>(this));
+			this.Services.AddService(typeof(IErrorService), InstanceServiceManager.GetService<IErrorService>(this));
+			this.Services.AddService(typeof(IOutlineNodeNameService), InstanceServiceManager.GetService<IOutlineNodeNameService>(this));
+			this.Services.AddService(typeof(ViewService), InstanceServiceManager.GetService<ViewService>(this));
+			this.Services.AddService(typeof(OptionService), InstanceServiceManager.GetService<OptionService>(this));
+			var xamlErrorService = InstanceServiceManager.GetService<XamlErrorService>(this);
 			this.Services.AddService(typeof(XamlErrorService), xamlErrorService);
 			this.Services.AddService(typeof(IXamlErrorSink), xamlErrorService);
+
 			
 			_componentService = new XamlComponentService(this);
 			this.Services.AddService(typeof(IComponentService), _componentService);
