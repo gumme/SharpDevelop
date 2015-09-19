@@ -87,6 +87,7 @@
       <Link>Configuration\GlobalAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="ArrangeDirection.cs" />
+    <Compile Include="Commands.cs" />
     <Compile Include="Controls\NullableComboBox.cs" />
     <Compile Include="Controls\RenderTransformOriginThumb.cs" />
     <Compile Include="Controls\Thumbs\PointThumb.cs" />
@@ -134,7 +135,9 @@
       <DependentUpon>WrapItemContextMenu.xaml</DependentUpon>
     </Compile>
     <Compile Include="Extensions\WrapItemsContextMenuExtension.cs" />
+    <Compile Include="InstanceServiceManager.cs" />
     <Compile Include="MarkupExtensions\DesignItemBinding.cs" />
+    <Compile Include="OutlineView\OutlineNodeNameService.cs" />
     <Compile Include="OutlineView\OutlineNodeBase.cs" />
     <Compile Include="Extensions\WrapItemContextMenuExtension.cs" />
     <Compile Include="Extensions\WrapItemsContextMenu.xaml.cs">

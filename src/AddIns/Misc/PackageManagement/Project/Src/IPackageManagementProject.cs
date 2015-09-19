@@ -19,8 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using System.Runtime.Versioning;
+
 using ICSharpCode.PackageManagement.EnvDTE;
 using NuGet;
 
@@ -63,7 +63,10 @@ namespace ICSharpCode.PackageManagement
 		UninstallPackageAction CreateUninstallPackageAction();
 		UpdatePackageAction CreateUpdatePackageAction();
 		UpdatePackagesAction CreateUpdatePackagesAction();
+		ReinstallPackageAction CreateReinstallPackageAction();
 		
 		void RunPackageOperations(IEnumerable<PackageOperation> expectedOperations);
+		
+		IPackage FindPackage(string packageId, SemanticVersion version);
 	}
 }
