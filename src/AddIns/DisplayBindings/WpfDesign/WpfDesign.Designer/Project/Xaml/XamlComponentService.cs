@@ -102,7 +102,7 @@ namespace ICSharpCode.WpfDesign.Designer.Xaml
 		/// <summary>
 		/// registers components from an existing XAML tree
 		/// </summary>
-		internal XamlDesignItem RegisterXamlComponentRecursive(XamlObject obj)
+		public XamlDesignItem RegisterXamlComponentRecursive(XamlObject obj)
 		{
 			if (obj == null) return null;
 			
