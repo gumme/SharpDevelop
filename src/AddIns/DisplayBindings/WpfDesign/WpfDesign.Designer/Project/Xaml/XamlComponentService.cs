@@ -26,7 +26,7 @@ using ICSharpCode.WpfDesign.XamlDom;
 
 namespace ICSharpCode.WpfDesign.Designer.Xaml
 {
-	sealed class XamlComponentService : IComponentService
+	public sealed class XamlComponentService : IComponentService
 	{
 		public event EventHandler<DesignItemPropertyChangedEventArgs> PropertyChanged;
 		
