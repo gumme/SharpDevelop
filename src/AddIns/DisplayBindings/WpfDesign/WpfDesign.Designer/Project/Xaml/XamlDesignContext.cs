@@ -148,6 +148,14 @@ namespace ICSharpCode.WpfDesign.Designer.Xaml
 		}
 		
 		/// <summary>
+		/// return current instance of ComponentService
+		/// </summary>
+		public XamlComponentService ComponentService
+		{
+			get { return _componentService; }
+		}
+		
+		/// <summary>
 		/// Gets the parser Settings being used
 		/// </summary>
 		public XamlParserSettings ParserSettings {
