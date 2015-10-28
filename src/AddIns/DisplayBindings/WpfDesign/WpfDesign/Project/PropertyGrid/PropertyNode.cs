@@ -57,7 +57,7 @@ namespace ICSharpCode.WpfDesign.PropertyGrid
 				if (dp != null)
 				{
 					var dpd = DependencyPropertyDescriptor.FromProperty(dp, FirstProperty.DesignItem.ComponentType);
-					if (dpd.IsAttached)
+					if (dpd!=null && dpd.IsAttached)
 					{
 						// Will return the attached property name in the form of <DeclaringType>.<PropertyName>
 						return dpd.Name;
