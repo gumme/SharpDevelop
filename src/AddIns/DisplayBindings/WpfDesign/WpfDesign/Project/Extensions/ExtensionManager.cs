@@ -199,7 +199,7 @@ namespace ICSharpCode.WpfDesign.Extensions
 				foreach (ExtensionForAttribute designerFor in extensionForAttributes) {
 					ExtensionServer server = GetServerForExtension(type);
 					ExtensionAttribute extensionAttribute = type.GetCustomAttributes(typeof(ExtensionAttribute), false).FirstOrDefault() as ExtensionAttribute;
-					AddExtensionEntry(designerFor.DesignedItemType, new ExtensionEntry(type, server,  designerFor.OverrideExtensions.ToList(), extensionAttribute != null ? extensionAttribute.Order : 0));
+					AddExtensionEntry(designerFor.DesignedItemType, new ExtensionEntry(type, server, designerFor.ExcludeTypes.ToList(),  designerFor.OverrideExtensions.ToList(), extensionAttribute != null ? extensionAttribute.Order : 0));
 				}
 			}
 		}
