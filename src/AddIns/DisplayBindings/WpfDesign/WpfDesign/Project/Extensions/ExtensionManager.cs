@@ -59,27 +59,31 @@ namespace ICSharpCode.WpfDesign.Extensions
 			}
 		}
 		
+
 		#region Manage ExtensionEntries
 		sealed class ExtensionEntry
 		{
 			internal readonly Type ExtensionType;
 			internal readonly ExtensionServer Server;
 			internal readonly List<Type> OverriddenExtensionTypes = new List<Type>();
+			internal readonly List<Type> ExcludeTypes = new List<Type>();
 			internal readonly int Order;
 			
-			public ExtensionEntry(Type extensionType, ExtensionServer server, Type overriddenExtensionType, int order)
+			public ExtensionEntry(Type extensionType, ExtensionServer server, Type exceptionType, Type overriddenExtensionType, int order)
 			{
 				this.ExtensionType = extensionType;
 				this.Server = server;
 				this.OverriddenExtensionTypes.Add(overriddenExtensionType);
+				this.ExcludeTypes.Add(exceptionType);
 				this.Order = order;
 			}
-			
-			public ExtensionEntry(Type extensionType, ExtensionServer server, List<Type> overriddenExtensionTypes, int order)
+
+			public ExtensionEntry(Type extensionType, ExtensionServer server, List<Type> exceptionTypes, List<Type> overriddenExtensionTypes, int order)
 			{
 				this.ExtensionType = extensionType;
 				this.Server = server;
 				this.OverriddenExtensionTypes = overriddenExtensionTypes;
+				this.ExcludeTypes = exceptionTypes;
 				this.Order = order;
 			}
 		}
@@ -100,7 +104,10 @@ namespace ICSharpCode.WpfDesign.Extensions
 			List<ExtensionEntry> result = new List<ExtensionEntry>();
 			List<Type> overriddenExtensions = new List<Type>();
 			IEnumerable<ExtensionEntry> ie = _extensions.Where(x => x.Key.IsAssignableFrom(extendedItemType)).SelectMany(x => x.Value);
-			foreach (ExtensionEntry entry in ie) {
+			foreach (ExtensionEntry entry in ie)
+			{
+				if (entry.ExcludeTypes.Contains(extendedItemType))
+					continue;
 				if (!overriddenExtensions.Contains(entry.ExtensionType)) {
 					overriddenExtensions.AddRange(entry.OverriddenExtensionTypes);
 
