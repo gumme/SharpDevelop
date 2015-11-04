@@ -28,7 +28,9 @@ namespace ICSharpCode.WpfDesign.Extensions
 	{
 		Type _designedItemType;
 		Type _overrideExtension;
+		Type _excludeType;
 		List<Type> _overrideExtensions = new List<Type>();
+		List<Type> _excludeTypes = new List<Type>();
 		
 		/// <summary>
 		/// Gets the type of the item that is designed using this extension.
@@ -48,6 +50,20 @@ namespace ICSharpCode.WpfDesign.Extensions
 				_overrideExtensions.AddRange(value);
 			}
 		}
+
+		/// <summary>
+		/// Gets/Sets the types of another extension that this extension is overriding.
+		/// </summary>
+		public Type[] ExcludeTypes
+		{
+			get { return _excludeTypes.ToArray(); }
+			set
+			{
+				_excludeTypes.AddRange(value);
+			}
+		}
+
+		
 		
 		/// <summary>
 		/// Gets/Sets the type of another extension that this extension is overriding.
@@ -62,6 +78,24 @@ namespace ICSharpCode.WpfDesign.Extensions
 					}
 					if(!_overrideExtensions.Contains(value))
 						_overrideExtensions.Add(value);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Gets/Sets the type of another extension that this extension is overriding.
+		/// </summary>
+		public Type ExcludeType
+		{
+			get { return _excludeType; }
+			set
+			{
+				_excludeType = value;
+				if (value != null)
+				{
+					
+					if (!_excludeTypes.Contains(value))
+						_excludeTypes.Add(value);
 				}
 			}
 		}
