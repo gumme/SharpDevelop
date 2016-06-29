@@ -18,13 +18,27 @@
 
 using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Windows.Media;
 using System.Windows.Controls;
 using ICSharpCode.WpfDesign.Extensions;
 
 namespace ICSharpCode.WpfDesign.Designer.Extensions
 {
+	static class TransparentBrushHelper
+	{
+		public static readonly Brush TransparentBrush;
+
+		static TransparentBrushHelper()
+		{
+			// Must freeze the brush before using it in the CustomInstanceFactory derived classes in this file,
+			// otherwise me might get a memory leak. Not sure why the leak occurs or why freezing the brush helps, but the memory leak
+			// got tracked here with a Memory Profiler and the leak was no longer present after the call to Freeze was added here.
+			// Also, now when the brush is frozen we can safely share the brush.
+			TransparentBrush = new SolidColorBrush(Colors.Transparent);
+			TransparentBrush.Freeze();
+		}
+	}
+
 	/// <summary>
 	/// Instance factory used to create Panel instances.
 	/// Sets the panels Brush to a transparent brush, and modifies the panel's type descriptor so that
@@ -34,8 +48,6 @@ namespace ICSharpCode.WpfDesign.Designer.Extensions
 	[ExtensionFor(typeof(Panel))]
 	public sealed class PanelInstanceFactory : CustomInstanceFactory
 	{
-		Brush _transparentBrush = new SolidColorBrush(Colors.Transparent);
-		
 		/// <summary>
 		/// Creates an instance of the specified type, passing the specified arguments to its constructor.
 		/// </summary>
@@ -45,10 +57,10 @@ namespace ICSharpCode.WpfDesign.Designer.Extensions
 			Panel panel = instance as Panel;
 			if (panel != null) {
 				if (panel.Background == null) {
-					panel.Background = _transparentBrush;
+					panel.Background = TransparentBrushHelper.TransparentBrush;
 				}
 				TypeDescriptionProvider provider = new DummyValueInsteadOfNullTypeDescriptionProvider(
-					TypeDescriptor.GetProvider(panel), "Background", _transparentBrush);
+					TypeDescriptor.GetProvider(panel), "Background", TransparentBrushHelper.TransparentBrush);
 				TypeDescriptor.AddProvider(provider, panel);
 			}
 			return instance;
@@ -58,8 +70,6 @@ namespace ICSharpCode.WpfDesign.Designer.Extensions
 	[ExtensionFor(typeof(HeaderedContentControl))]
 	public sealed class HeaderedContentControlInstanceFactory : CustomInstanceFactory
 	{
-		Brush _transparentBrush = new SolidColorBrush(Colors.Transparent);
-		
 		/// <summary>
 		/// Creates an instance of the specified type, passing the specified arguments to its constructor.
 		/// </summary>
@@ -69,10 +79,10 @@ namespace ICSharpCode.WpfDesign.Designer.Extensions
 			Control control = instance as Control;
 			if (control != null) {
 				if (control.Background == null) {
-					control.Background = _transparentBrush;
+					control.Background = TransparentBrushHelper.TransparentBrush;
 				}
 				TypeDescriptionProvider provider = new DummyValueInsteadOfNullTypeDescriptionProvider(
-					TypeDescriptor.GetProvider(control), "Background", _transparentBrush);
+					TypeDescriptor.GetProvider(control), "Background", TransparentBrushHelper.TransparentBrush);
 				TypeDescriptor.AddProvider(provider, control);
 			}
 			return instance;
@@ -82,8 +92,6 @@ namespace ICSharpCode.WpfDesign.Designer.Extensions
 	[ExtensionFor(typeof(ItemsControl))]
 	public sealed class TransparentControlsInstanceFactory : CustomInstanceFactory
 	{
-		Brush _transparentBrush = new SolidColorBrush(Colors.Transparent);
-		
 		/// <summary>
 		/// Creates an instance of the specified type, passing the specified arguments to its constructor.
 		/// </summary>
@@ -94,11 +102,11 @@ namespace ICSharpCode.WpfDesign.Designer.Extensions
 			if (control != null && (
 				type == typeof(ItemsControl))) {
 				if (control.Background == null) {
-					control.Background = _transparentBrush;
+					control.Background = TransparentBrushHelper.TransparentBrush;
 				}
 				
 				TypeDescriptionProvider provider = new DummyValueInsteadOfNullTypeDescriptionProvider(
-					TypeDescriptor.GetProvider(control), "Background", _transparentBrush);
+					TypeDescriptor.GetProvider(control), "Background", TransparentBrushHelper.TransparentBrush);
 				TypeDescriptor.AddProvider(provider, control);
 			}
 			return instance;
@@ -108,8 +116,6 @@ namespace ICSharpCode.WpfDesign.Designer.Extensions
 	[ExtensionFor(typeof(Border))]
 	public sealed class BorderInstanceFactory : CustomInstanceFactory
 	{
-		Brush _transparentBrush = new SolidColorBrush(Colors.Transparent);
-
 		/// <summary>
 		/// Creates an instance of the specified type, passing the specified arguments to its constructor.
 		/// </summary>
@@ -121,10 +127,10 @@ namespace ICSharpCode.WpfDesign.Designer.Extensions
 			{
 				if (panel.Background == null)
 				{
-					panel.Background = _transparentBrush;
+					panel.Background = TransparentBrushHelper.TransparentBrush;
 				}
 				TypeDescriptionProvider provider = new DummyValueInsteadOfNullTypeDescriptionProvider(
-					TypeDescriptor.GetProvider(panel), "Background", _transparentBrush);
+					TypeDescriptor.GetProvider(panel), "Background", TransparentBrushHelper.TransparentBrush);
 				TypeDescriptor.AddProvider(provider, panel);
 			}
 			return instance;
