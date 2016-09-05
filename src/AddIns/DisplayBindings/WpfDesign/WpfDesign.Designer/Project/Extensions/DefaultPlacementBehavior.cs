@@ -65,8 +65,8 @@ namespace ICSharpCode.WpfDesign.Designer.Extensions
 
 			if (operation.Type != PlacementType.Delete)
 			{
-				this.ExtendedItem.Services.Selection.SetSelectedComponents(null);
-				this.ExtendedItem.Services.Selection.SetSelectedComponents(operation.PlacedItems.Select(x => x.Item).ToList());
+//				this.ExtendedItem.Services.Selection.SetSelectedComponents(null);
+//				this.ExtendedItem.Services.Selection.SetSelectedComponents(operation.PlacedItems.Select(x => x.Item).ToList());
 			}
 		}
 
